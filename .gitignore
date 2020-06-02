@@ -16,6 +16,7 @@
 
 # Files we dont want to be upladed
 NSPL_FEB_2020_UK
+build
 
 # Generated assets
 *bindata.go
