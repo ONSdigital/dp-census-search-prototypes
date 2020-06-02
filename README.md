@@ -14,7 +14,7 @@ In order to run the service locally you will need the following:
 - Clone the repo go get github.com/ONSdigital/dp-census-search-prototypes
 - Run elasticsearch
 - Choose an application/script to run
-    - Run `make parentsearch` to generate searchable documents across geographical boundaries to find parent resources (e.g. find Wales resources if searching for Cardiff), see documentation [here](#Geographical Search (including parent documents))
+    - Run `make parentsearch` to generate searchable documents across geographical boundaries to find parent resources (e.g. find Wales resources if searching for Cardiff), see [documentation here](#geographical-search-including-parent-documents))
 
 #### Notes
 
