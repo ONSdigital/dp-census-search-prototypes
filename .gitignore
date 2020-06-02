@@ -13,3 +13,9 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Files we dont want to be upladed
+NSPL_FEB_2020_UK
+
+# Generated assets
+*bindata.go
