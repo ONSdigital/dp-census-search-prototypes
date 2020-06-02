@@ -14,7 +14,11 @@ In order to run the service locally you will need the following:
 - Clone the repo go get github.com/ONSdigital/dp-census-search-prototypes
 - Run elasticsearch
 - Choose an application/script to run
-    - Run `make parentsearch` to generate searchable documents across geographical boundaries to find parent resources (e.g. find Wales resources if searching for Cardiff), see documentation [here]()
+    - Run `make parentsearch` to generate searchable documents across geographical boundaries to find parent resources (e.g. find Wales resources if searching for Cardiff), see documentation [here](#Geographical Search (including parent documents))
+
+#### Notes
+
+See [command list](COMMANDS.md) for a list of helpful commands to run alongside and independently from scripts or prototypes.
 
 ### Geographical Search (including parent documents)
 
@@ -24,7 +28,7 @@ Using test.csv file to upload geo location docs into Elasticsearch, data in here
 
 The model works for versions 6.7 and 6.8. A slight tweak to the mappings.json file to get it working with version 7.*.* by removing extra nest of `doc`.
 
-7 documents will be generated and stored on an elasticsearch index of `test_geolocation`. See [command list](COMMANDS.md) for a list of helpful commands.
+7 documents will be generated and stored on an elasticsearch index of `test_geolocation`.
 
 #### GeoLocation Queries
 
