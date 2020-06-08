@@ -14,7 +14,8 @@ In order to run the service locally you will need the following:
 - Clone the repo go get github.com/ONSdigital/dp-census-search-prototypes
 - Run elasticsearch
 - Choose an application/script to run
-    - Run `make parentsearch` to generate searchable documents across geographical boundaries to find parent resources (e.g. find Wales resources if searching for Cardiff), see [documentation here](#geographical-search-including-parent-documents)
+    - Generate searchable documents across geographical boundaries and find parent resources (e.g. find Wales resources if searching for Cardiff), see [documentation here](#geographical-search-including-parent-documents)
+    - Generate postcode index to search for datasets by postcode, see [documentation here](#postcode-search-with-distance)
 
 #### Notes
 
@@ -28,7 +29,7 @@ Using test.csv file to upload geo location docs into Elasticsearch, data in here
 
 The model works for versions 6.7 and 6.8. A slight tweak to the mappings.json file to get it working with version 7.*.* by removing extra nest of `doc`.
 
-7 documents will be generated and stored on an elasticsearch index of `test_geolocation`.
+7 documents will be generated and stored on an elasticsearch index of `test_geolocation` by running `make parentsearch`
 
 #### GeoLocation Queries
 
@@ -89,3 +90,40 @@ curl -X GET "localhost:9200/test_geolocation/_search?pretty" -H 'Content-Type: a
 ```
 
 Intersects will find all boundaries which cross over with the polygon above - scoring is equal so cannot distinguish smaller areas which should be higher in the list then larger areas, e.g. Cathays, Roath, Cardiff then Wales.
+
+### Postcode Search with Distance
+
+Search for datasets within a distance of postcode.
+
+#### Setting up data
+
+1) Download postcode data from the geo portal [here](https://geoportal.statistics.gov.uk/datasets/national-statistics-postcode-lookup-february-2020). Then click on download and move zip to root of this repository on your local machine: `mv Downloads/NSPL_FEB_2020_UK.zip .`. Unzip file, the data layout to postcode data should look like:
+    - NSPL_FEB_2020_UK
+      - Data
+        - NSPL_FEB_2020_UK.csv
+
+2) Upload postcode data to elasticsearch index with:
+`make postcodesearch`
+This will take approximately 4 minutes and 20 seconds and documents will be stored in `test_postcode` index.
+
+#### Postcode Queries
+
+1) Find postcode and return latitude, longitude coordinate to be use to find datasets.
+
+```
+curl -XGET localhost:9200/test_postcode/_search  -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "term": {
+            "postcode": "ze39xp"
+        }
+    }
+}
+'
+```
+
+2) Find datasets within distance of coordinates (lat/long) retreived by query 1)
+
+```
+curl -XGET <TODO>
+```

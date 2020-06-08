@@ -34,10 +34,10 @@ func NewElasticSearchAPI(clienter dphttp.Clienter, elasticSearchAPIURL string) *
 }
 
 // CreateSearchIndex creates a new index in elastic search
-func (api *API) CreateSearchIndex(ctx context.Context, indexName string) (int, error) {
+func (api *API) CreateSearchIndex(ctx context.Context, indexName string, mappingsFile string) (int, error) {
 	path := api.url + "/" + indexName
 
-	indexMappings, err := Asset("mappings.json")
+	indexMappings, err := Asset(mappingsFile)
 	if err != nil {
 		return 0, err
 	}
@@ -78,6 +78,33 @@ func (api *API) AddGeoLocation(ctx context.Context, indexName string, geoDoc *mo
 	}
 
 	_, status, err := api.CallElastic(ctx, path, "POST", bytes)
+	if err != nil {
+		return status, err
+	}
+
+	return status, nil
+}
+
+// BulkRequest ...
+func (api *API) BulkRequest(ctx context.Context, indexName string, documents []interface{}) (int, error) {
+	// path := api.url + "/_bulk"
+	path := api.url + "/_bulk"
+
+	var bulk []byte
+
+	for _, doc := range documents {
+
+		b, err := json.Marshal(doc)
+		if err != nil {
+			return 0, err
+		}
+
+		bulk = append(bulk, []byte("{ \"index\": {\"_index\": \""+indexName+"\", \"_type\": \"_doc\"} }\n")...) // It may need an ID?
+		bulk = append(bulk, b...)
+		bulk = append(bulk, []byte("\n")...)
+	}
+
+	_, status, err := api.CallElastic(ctx, path, "POST", bulk)
 	if err != nil {
 		return status, err
 	}
