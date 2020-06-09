@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
+	errs "github.com/ONSdigital/dp-census-search-prototypes/apierrors"
 	"github.com/ONSdigital/dp-census-search-prototypes/models"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
@@ -112,6 +113,68 @@ func (api *API) BulkRequest(ctx context.Context, indexName string, documents []i
 	return status, nil
 }
 
+// GetPostcodes searches index for resources containing postcode
+func (api *API) GetPostcodes(ctx context.Context, indexName, postcode string) (*models.PostcodeResponse, int, error) {
+	path := api.url + "/" + indexName + "/_search"
+
+	logData := log.Data{"postcode": postcode, "path": path}
+	log.Event(ctx, "get postcode", log.INFO, log.Data{"postcode": postcode})
+
+	body := models.PostcodeRequest{
+		Query: models.PostcodeQuery{
+			Distance: models.PostcodeTerm{
+				Postcode: postcode,
+			},
+		},
+	}
+
+	bytes, err := json.Marshal(body)
+	if err != nil {
+		log.Event(ctx, "unable to marshal elastic search query to bytes", log.ERROR, log.Error(err), logData)
+		return nil, 0, errs.ErrMarshallingQuery
+	}
+
+	responseBody, status, err := api.CallElastic(ctx, path, "GET", bytes)
+	if err != nil {
+		return nil, status, err
+	}
+
+	response := &models.PostcodeResponse{}
+
+	if err = json.Unmarshal(responseBody, response); err != nil {
+		log.Event(ctx, "unable to unmarshal json body", log.ERROR, log.Error(err), logData)
+		return nil, status, errs.ErrUnmarshallingJSON
+	}
+
+	return response, status, nil
+
+}
+
+// QueryGeoLocation ...
+func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int) (int, error) {
+	if geoLocation == nil || geoLocation.Type != "polygon" {
+		return 0, errors.New("missing data")
+	}
+
+	log.Event(ctx, "get documents based on geo polygon search", log.INFO)
+
+	path := api.url + "/" + indexName + "/_doc"
+
+	query := buildGeoLocationQuery(*geoLocation)
+
+	bytes, err := json.Marshal(query)
+	if err != nil {
+		return 0, err
+	}
+
+	_, status, err := api.CallElastic(ctx, path, "POST", bytes)
+	if err != nil {
+		return status, err
+	}
+
+	return status, nil
+}
+
 // CallElastic builds a request to elastic search based on the method, path and payload
 func (api *API) CallElastic(ctx context.Context, path, method string, payload interface{}) ([]byte, int, error) {
 	logData := log.Data{"url": path, "method": method}
@@ -162,4 +225,24 @@ func (api *API) CallElastic(ctx context.Context, path, method string, payload in
 	}
 
 	return jsonBody, resp.StatusCode, nil
+}
+
+func buildGeoLocationQuery(geoLocation models.GeoLocation) models.GeoLocationRequest {
+	return models.GeoLocationRequest{
+		Query: models.GeoLocationQuery{
+			Bool: models.BooleanObject{
+				Must: models.MustObject{
+					Match: models.MatchAll{},
+				},
+				Filter: models.GeoFilter{
+					Shape: models.GeoShape{
+						Location: models.GeoLocationObj{
+							Shape:    geoLocation,
+							Relation: "intersects",
+						},
+					},
+				},
+			},
+		},
+	}
 }

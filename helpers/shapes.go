@@ -8,10 +8,10 @@ import (
 // Shape ...
 type Shape struct {
 	Type        string
-	Coordinates []Coordinate
+	Coordinates [][]float64
 }
 
-// Coordinate ...
+// // Coordinate ...
 type Coordinate struct {
 	Lat float64
 	Lon float64
@@ -41,7 +41,7 @@ func CircleToPolygon(geoPoint Coordinate, radius float64, segments int) (*Shape,
 		Type: "Polygon",
 	}
 
-	var coordinates []Coordinate
+	var coordinates [][]float64
 
 	for i := 0; i < segments; i++ {
 		segment := (twoPi * float64(-i)) / float64(segments)
@@ -65,7 +65,7 @@ func toDegrees(angleInRadians float64) float64 {
 	return (angleInRadians * 180) / math.Pi
 }
 
-func generateCoordinate(geoPoint Coordinate, distance float64, segment float64) Coordinate {
+func generateCoordinate(geoPoint Coordinate, distance float64, segment float64) []float64 {
 	lat1 := toRadians(geoPoint.Lat)
 	lon1 := toRadians(geoPoint.Lon)
 
@@ -81,10 +81,7 @@ func generateCoordinate(geoPoint Coordinate, distance float64, segment float64) 
 		math.Cos(dByR)-math.Sin(lat1)*math.Sin(lat),
 	)
 
-	return Coordinate{
-		Lat: toDegrees(lat),
-		Lon: toDegrees(lon),
-	}
+	return []float64{toDegrees(lat), toDegrees(lon)}
 }
 
 func validateInput(geoPoint Coordinate, radius float64, segments int) error {
