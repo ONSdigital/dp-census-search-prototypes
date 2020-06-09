@@ -19,6 +19,8 @@ type PostcodeRequest struct {
 	Query PostcodeQuery `json:"query"`
 }
 
+// ------------------------------------------------------------------------
+
 type PostcodeQuery struct {
 	Distance PostcodeTerm `json:"term"`
 }
@@ -28,16 +30,28 @@ type PostcodeTerm struct {
 }
 
 type PostcodeResponse struct {
-	Hits []HitObj `json:"hits.hits"`
+	Hits EmbededHits `json:"hits"`
 }
 
-// type HitsObj struct {
-// 	Hits []HitObj `json:"hits"`
-// }
+type EmbededHits struct {
+	Hits []HitObj `json:"hits"`
+}
 
 type HitObj struct {
-	Postcode    string  `json:"_source.postcode"`
-	RawPostcode string  `json:"_source.postcode_raw"`
-	Lat         float64 `json:"_source.pin.location.lat"`
-	Lon         float64 `json:"_source.pin.location.lon"`
+	Source Source `json:"_source"`
+}
+
+type Source struct {
+	Postcode    string `json:"postcode"`
+	RawPostcode string `json:"postcode_raw"`
+	Pin         Pin    `json:"pin"`
+}
+
+type Pin struct {
+	Location PinLocation `json:"location"`
+}
+
+type PinLocation struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
 }

@@ -31,7 +31,7 @@ var miles = map[string]bool{
 
 // ErrorInvalidDistance - return error
 func ErrorInvalidDistance(m string) error {
-	err := errors.New("invalid distance value: " + m + ". Should contain a number and unit of distance separated by a comma e.g. 40km")
+	err := errors.New("invalid distance value: " + m + ". Should contain a number and unit of distance separated by a comma e.g. 40,km")
 	return err
 }
 
@@ -53,12 +53,15 @@ func ValidateDistance(distance string) (*DistObj, error) {
 		return nil, ErrorInvalidDistance(distance)
 	}
 
-	value, err := strconv.ParseFloat(values[0], 64)
+	dist := strings.Replace(values[0], ",", "", 1)
+	unit := values[1]
+
+	value, err := strconv.ParseFloat(dist, 64)
 	if err != nil {
 		return nil, ErrorInvalidDistance(distance)
 	}
 
-	if !kilometres[values[1]] && !miles[values[1]] {
+	if !kilometres[unit] && !miles[unit] {
 		return nil, ErrorInvalidDistance(distance)
 	}
 

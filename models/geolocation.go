@@ -46,41 +46,30 @@ type GeoLocationObj struct {
 
 // ------------------------------------------------------------------------
 
-// type GeoLocationResponse struct {
-// 	Hits Hits `json:"hits"`
-// }
+type GeoLocationResponse struct {
+	Hits Hits `json:"hits"`
+}
 
-// type Hits struct {
-// 	Total   int       `json:"total"`
-// 	HitList []HitList `json:"hits"`
-// }
+type Hits struct {
+	Total   int       `json:"total"`
+	HitList []HitList `json:"hits"`
+}
 
-// type HitList struct {
-// 	Highlight Highlight    `json:"highlight"`
-// 	Score     float64      `json:"_score"`
-// 	Source    SearchResult `json:"_source"`
-// }
+type HitList struct {
+	Score  float64      `json:"_score"`
+	Source SearchResult `json:"_source"`
+}
 
-// type Highlight struct {
-// 	Code  []string `json:"code,omitempty"`
-// 	Label []string `json:"label,omitempty"`
-// }
+// SearchResults represents a structure for a list of returned objects
+type SearchResults struct {
+	Count  int            `json:"count"`
+	Items  []SearchResult `json:"items"`
+	Limit  int            `json:"limit"`
+	Offset int            `json:"offset"`
+}
 
-// // SearchResults represents a structure for a list of returned objects
-// type SearchResults struct {
-// 	Count  int            `json:"count"`
-// 	Items  []SearchResult `json:"items"`
-// 	Limit  int            `json:"limit"`
-// 	Offset int            `json:"offset"`
-// }
-
-// // SearchResult represents data on a single item of search results
-// type SearchResult struct {
-// 	Code               string  `json:"code"`
-// 	URL                string  `json:"url,omitempty"`
-// 	DimensionOptionURL string  `json:"dimension_option_url,omitempty"`
-// 	HasData            bool    `json:"has_data"`
-// 	Label              string  `json:"label"`
-// 	Matches            Matches `json:"matches,omitempty"`
-// 	NumberOfChildren   int     `json:"number_of_children"`
-// }
+// SearchResult represents data on a single item of search results
+type SearchResult struct {
+	Name     string      `json:"name"`
+	Location GeoLocation `json:"location,omitempty"`
+}

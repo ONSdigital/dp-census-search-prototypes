@@ -1,23 +1,21 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 
 	errs "github.com/ONSdigital/dp-census-search-prototypes/apierrors"
-	"github.com/ONSdigital/dp-census-search-prototypes/models"
 	"github.com/ONSdigital/dp-census-search-prototypes/helpers"
+	"github.com/ONSdigital/dp-census-search-prototypes/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
 
 const (
-	defaultLimit  = 50
-	defaultOffset = 0
+	defaultLimit    = 50
+	defaultOffset   = 0
 	defaultSegments = 30
 
 	postcodeNotFound = "postcode not found"
@@ -27,14 +25,11 @@ const (
 	invalidDistanceParam  = "invalid distance value"
 )
 
-var (
-	err        error
-	reNotFound = regexp.MustCompile(`\bbody: (\w+ not found)[\n$]`)
-)
-
 func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
+
+	var err error
 
 	postcode := vars["postcode"]
 
@@ -81,7 +76,8 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 		Offset:            offset,
 	}
 
-	distObj, err := models.ValidateDistance(distance); err != nil {
+	distObj, err := models.ValidateDistance(distance)
+	if err != nil {
 		log.Event(ctx, "getPostcodeSearch endpoint: validate query param, distance", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, err)
 		return
@@ -99,37 +95,45 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 	log.Event(ctx, "getPostcodeSearch endpoint: just before querying search index", log.INFO, logData)
 
 	// lookup postcode
-	response, _, err := api.elasticsearch.GetPostcodes(ctx, api.postcodeIndex, lcPostcode)
+	postcodeResponse, _, err := api.elasticsearch.GetPostcodes(ctx, api.postcodeIndex, lcPostcode)
 	if err != nil {
 		log.Event(ctx, "getPostcodeSearch endpoint: failed to search for postcode", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, err)
 		return
 	}
 
-	// Calculate distance (in metres) based on distObj
-	distance := distObj.CalculateDistanceInMetres(ctx)
+	if len(postcodeResponse.Hits.Hits) < 1 {
+		log.Event(ctx, "getPostcodeSearch endpoint: failed to find postcode", log.ERROR, log.Error(errs.ErrPostcodeNotFound), logData)
+		setErrorCode(w, errs.ErrPostcodeNotFound)
+		return
+	}
 
-	pcCoordinate:= helpers.Coordinate{
-		Lat: response.Hits[0].Lat,
-		Lon: response.Hits[0].Lon,
+	// calculate distance (in metres) based on distObj
+	dist := distObj.CalculateDistanceInMetres(ctx)
+
+	pcCoordinate := helpers.Coordinate{
+		Lat: postcodeResponse.Hits.Hits[0].Source.Pin.Location.Lat,
+		Lon: postcodeResponse.Hits.Hits[0].Source.Pin.Location.Lon,
 	}
 
 	// build polygon from circle using long/lat of postcod and distance
-	polygonShape,err := helpers.CircleToPolygon(pcCoordinate, distance, defaultSegments)
+	polygonShape, err := helpers.CircleToPolygon(pcCoordinate, dist, defaultSegments)
 	if err != nil {
 		setErrorCode(w, err)
 	}
 
-	geoLocation := models.GeoLocation{
-		Type: "polygon", // make constant variable?
-		Coordinates: polygonShape.Coordinates,
+	var coordinates [][][]float64
+	geoLocation := &models.GeoLocation{
+		Type:        "polygon", // TODO make constant variable?
+		Coordinates: append(coordinates, polygonShape.Coordinates),
 	}
 
-	// TODO - Query Dataset Index with polygon search (intersect)
-	response, _, err := api.elasticsearch.QueryGeoLocation(ctx, datasetIndex, page.Limit, page.Offset)
+	// query dataset index with polygon search (intersect)
+	response, _, err := api.elasticsearch.QueryGeoLocation(ctx, api.datasetIndex, geoLocation, page.Limit, page.Offset)
 	if err != nil {
 		log.Event(ctx, "getPostcodeSearch endpoint: failed to query elastic search index", log.ERROR, log.Error(err), logData)
-		return nil, err
+		setErrorCode(w, err)
+		return
 	}
 
 	searchResults := &models.SearchResults{
@@ -139,21 +143,17 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 	}
 
 	for _, result := range response.Hits.HitList {
-		result.Source.DimensionOptionURL = result.Source.URL
-		result.Source.URL = ""
-
-		result = getSnippets(ctx, result)
-
 		doc := result.Source
 		searchResults.Items = append(searchResults.Items, doc)
 	}
 
-	searchResults.Count = len(searchResults.Items)
+	// Do we need to do this?
+	// searchResults.Count = len(searchResults.Items)
 
 	b, err := json.Marshal(searchResults)
 	if err != nil {
 		log.Event(ctx, "getPostcodeSearch endpoint: failed to marshal search resource into bytes", log.ERROR, log.Error(err), logData)
-		return nil, errs.ErrInternalServer
+		setErrorCode(w, errs.ErrInternalServer)
 	}
 
 	setJSONContentType(w)
@@ -164,69 +164,6 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 	}
 
 	log.Event(ctx, "getPostcodeSearch endpoint: successfully searched index", log.INFO, logData)
-}
-
-func getSnippets(ctx context.Context, result models.HitList) models.HitList {
-
-	if len(result.Highlight.Code) > 0 {
-		highlightedCode := result.Highlight.Code[0]
-		var prevEnd int
-		logData := log.Data{}
-		for {
-			start := prevEnd + strings.Index(highlightedCode, "\u0001S") + 1
-
-			logData["start"] = start
-
-			end := strings.Index(highlightedCode, "\u0001E")
-			if end == -1 {
-				break
-			}
-			logData["end"] = prevEnd + end - 2
-
-			snippet := models.Snippet{
-				Start: start,
-				End:   prevEnd + end - 2,
-			}
-
-			prevEnd = snippet.End
-
-			result.Source.Matches.Code = append(result.Source.Matches.Code, snippet)
-			log.Event(ctx, "getPostcodeSearch endpoint: added code snippet", log.INFO, logData)
-
-			highlightedCode = string(highlightedCode[end+2:])
-		}
-	}
-
-	if len(result.Highlight.Label) > 0 {
-		highlightedLabel := result.Highlight.Label[0]
-		var prevEnd int
-		logData := log.Data{}
-		for {
-			start := prevEnd + strings.Index(highlightedLabel, "\u0001S") + 1
-
-			logData["start"] = start
-
-			end := strings.Index(highlightedLabel, "\u0001E")
-			if end == -1 {
-				break
-			}
-			logData["end"] = prevEnd + end - 2
-
-			snippet := models.Snippet{
-				Start: start,
-				End:   prevEnd + end - 2,
-			}
-
-			prevEnd = snippet.End
-
-			result.Source.Matches.Label = append(result.Source.Matches.Label, snippet)
-			log.Event(ctx, "getPostcodeSearch endpoint: added label snippet", log.INFO, logData)
-
-			highlightedLabel = string(highlightedLabel[end+2:])
-		}
-	}
-
-	return result
 }
 
 func setJSONContentType(w http.ResponseWriter) {

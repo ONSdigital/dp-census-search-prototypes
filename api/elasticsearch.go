@@ -8,6 +8,6 @@ import (
 
 // Elasticsearcher - An interface used to access elasticsearch
 type Elasticsearcher interface {
-	GetPostcodes(ctx context.Context, postcode string) (*models.PostcodeResponse, int, error)
-	QueryGeoLocation(ctx context.Context, geodoc string, limit, offset int) (*models.SearchResponse, int, error)
+	GetPostcodes(ctx context.Context, indexName, postcode string) (*models.PostcodeResponse, int, error)
+	QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int) (*models.GeoLocationResponse, int, error)
 }

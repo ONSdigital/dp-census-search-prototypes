@@ -88,7 +88,6 @@ func (api *API) AddGeoLocation(ctx context.Context, indexName string, geoDoc *mo
 
 // BulkRequest ...
 func (api *API) BulkRequest(ctx context.Context, indexName string, documents []interface{}) (int, error) {
-	// path := api.url + "/_bulk"
 	path := api.url + "/_bulk"
 
 	var bulk []byte
@@ -118,7 +117,7 @@ func (api *API) GetPostcodes(ctx context.Context, indexName, postcode string) (*
 	path := api.url + "/" + indexName + "/_search"
 
 	logData := log.Data{"postcode": postcode, "path": path}
-	log.Event(ctx, "get postcode", log.INFO, log.Data{"postcode": postcode})
+	log.Event(ctx, "get postcode", log.INFO, logData)
 
 	body := models.PostcodeRequest{
 		Query: models.PostcodeQuery{
@@ -147,32 +146,38 @@ func (api *API) GetPostcodes(ctx context.Context, indexName, postcode string) (*
 	}
 
 	return response, status, nil
-
 }
 
 // QueryGeoLocation ...
-func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int) (int, error) {
+func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int) (*models.GeoLocationResponse, int, error) {
 	if geoLocation == nil || geoLocation.Type != "polygon" {
-		return 0, errors.New("missing data")
+		return nil, 0, errors.New("missing data")
 	}
 
-	log.Event(ctx, "get documents based on geo polygon search", log.INFO)
-
-	path := api.url + "/" + indexName + "/_doc"
+	path := api.url + "/" + indexName + "/_search"
 
 	query := buildGeoLocationQuery(*geoLocation)
 
+	log.Event(ctx, "get documents based on geo polygon search", log.INFO, log.Data{"query": query, "path": path})
+
 	bytes, err := json.Marshal(query)
 	if err != nil {
-		return 0, err
+		return nil, 0, err
 	}
 
-	_, status, err := api.CallElastic(ctx, path, "POST", bytes)
+	responseBody, status, err := api.CallElastic(ctx, path, "POST", bytes)
 	if err != nil {
-		return status, err
+		return nil, status, err
 	}
 
-	return status, nil
+	response := &models.GeoLocationResponse{}
+
+	if err = json.Unmarshal(responseBody, response); err != nil {
+		log.Event(ctx, "unable to unmarshal json body", log.ERROR, log.Error(err))
+		return nil, status, errs.ErrUnmarshallingJSON
+	}
+
+	return response, status, nil
 }
 
 // CallElastic builds a request to elastic search based on the method, path and payload

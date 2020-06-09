@@ -81,7 +81,7 @@ func generateCoordinate(geoPoint Coordinate, distance float64, segment float64) 
 		math.Cos(dByR)-math.Sin(lat1)*math.Sin(lat),
 	)
 
-	return []float64{toDegrees(lat), toDegrees(lon)}
+	return []float64{toDegrees(lon), toDegrees(lat)}
 }
 
 func validateInput(geoPoint Coordinate, radius float64, segments int) error {

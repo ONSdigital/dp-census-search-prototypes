@@ -4,7 +4,7 @@ import "errors"
 
 // A list of error messages for Search API
 var (
-	ErrEmptyDistanceTerm      = errors.New("empty distance term")
+	ErrEmptyDistanceTerm      = errors.New("empty query term: distance")
 	ErrIndexNotFound          = errors.New("search index not found")
 	ErrInternalServer         = errors.New("internal server error")
 	ErrMarshallingQuery       = errors.New("failed to marshal query to bytes for request body to send to elastic")
