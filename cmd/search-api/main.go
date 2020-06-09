@@ -7,17 +7,10 @@ import (
 	"syscall"
 
 	"github.com/ONSdigital/dp-census-search-prototypes/api"
+	"github.com/ONSdigital/dp-census-search-prototypes/config"
 	es "github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
-)
-
-var (
-	elasticSearchAPIURL = "http://localhost:9200"
-	datasetIndex        = "test_geolocation"
-	postcodeIndex       = "test_postcode"
-	bindAddr            = ":10000"
-	defaultMaxResults   = 1000
 )
 
 func main() {
@@ -36,10 +29,18 @@ func run(ctx context.Context) error {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-	cli := dphttp.NewClient()
-	esAPI := es.NewElasticSearchAPI(cli, elasticSearchAPIURL)
+	cfg, err := config.Get()
+	if err != nil {
+		log.Event(ctx, "failed to retrieve configuration", log.FATAL, log.Error(err))
+		return err
+	}
 
-	_, status, err := esAPI.CallElastic(ctx, elasticSearchAPIURL, "GET", nil)
+	log.Event(ctx, "config on startup", log.INFO, log.Data{"config": cfg})
+
+	cli := dphttp.NewClient()
+	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
+
+	_, status, err := esAPI.CallElastic(ctx, cfg.ElasticSearchAPIURL, "GET", nil)
 	if err != nil {
 		log.Event(ctx, "failed to start up, unable to connect to elastic search instance", log.ERROR, log.Error(err), log.Data{"http_status": status})
 		return err
@@ -47,7 +48,7 @@ func run(ctx context.Context) error {
 
 	apiErrors := make(chan error, 1)
 
-	api.CreateAndInitialiseSearchAPI(ctx, bindAddr, esAPI, defaultMaxResults, datasetIndex, postcodeIndex, apiErrors)
+	api.CreateAndInitialiseSearchAPI(ctx, cfg.BindAddr, esAPI, cfg.MaxSearchResultsOffset, cfg.DatasetIndex, cfg.PostcodeIndex, apiErrors)
 
 	// block until a fatal error occurs
 	select {
