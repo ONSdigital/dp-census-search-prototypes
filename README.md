@@ -25,7 +25,7 @@ See [command list](COMMANDS.md) for a list of helpful commands to run alongside 
 
 #### Setting up data
 
-Using test.csv file to upload geo location docs into Elasticsearch, data in here is made up but structurally based on what data we do have in the geoportal (example [here](https://geoportal.statistics.gov.uk/datasets/london-assembly-constituencies-december-2018-boundaries-en-bfc/geoservice)) and what is expected by Elasticsearch.
+Using `test-data/datasets.csv` file to upload geo location docs into Elasticsearch, data in here is made up but structurally based on what data we do have in the geoportal (example [here](https://geoportal.statistics.gov.uk/datasets/london-assembly-constituencies-december-2018-boundaries-en-bfc/geoservice)) and what is expected by Elasticsearch.
 
 The model works for versions 6.7 and 6.8. A slight tweak to the mappings.json file to get it working with version 7.*.* by removing extra nest of `doc`.
 
