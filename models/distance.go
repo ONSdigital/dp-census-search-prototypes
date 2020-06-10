@@ -26,6 +26,7 @@ var kilometres = map[string]bool{
 
 var miles = map[string]bool{
 	"m":     true,
+	"mile":  true,
 	"miles": true,
 }
 

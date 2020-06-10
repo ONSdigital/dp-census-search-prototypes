@@ -16,6 +16,7 @@ In order to run the service locally you will need the following:
 - Choose an application/script to run
     - Generate searchable documents across geographical boundaries and find parent resources (e.g. find Wales resources if searching for Cardiff), see [documentation here](#geographical-search-including-parent-documents)
     - Generate postcode index to search for datasets by postcode, see [documentation here](#postcode-search-with-distance)
+    - Generate search API for accessing prototypes, see [documentation here](#search-api)
 
 #### Notes
 
@@ -126,4 +127,32 @@ curl -XGET localhost:9200/test_postcode/_search  -H 'Content-Type: application/j
 
 ```
 curl -XGET <TODO>
+```
+
+### Search API
+
+All prototypes developed will exist on an endpoint in the search API. These include:
+
+- Search by Postcodes - endpoint: GET `/search/postcodes/{postcode}`
+- TODO - Search for parent docs via geo boundary file `search/by-boundaries`
+
+See [swagger spec](swagger.yaml) for documentation of how to use each endpoint on the API. Copy yaml into [swagger editor](https://editor.swagger.io/) (left panel) to generate a pretty web ui on the right to navigate documentaion.
+
+#### Setting up data
+
+Follow setting up data for [Geographical Search including parent documents: Setup](#geographical-search-including-parent-documents) and [Postocde Search with Distance: Setup](#geographical-search-including-parent-documents).
+
+#### Run API
+
+To start up the API use the following command: ...
+
+`make api`
+
+...in root of repository.
+
+Follow swagger documentation on how to interact with local api, some examples are below:
+
+```
+curl -XGET localhost:10000/search/postcodes/BR33DA?distance=5,miles
+curl -XGET localhost:10000/search/postcodes/cf244ny?distance=0.5,km&relation=intersects
 ```
