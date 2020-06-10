@@ -149,14 +149,14 @@ func (api *API) GetPostcodes(ctx context.Context, indexName, postcode string) (*
 }
 
 // QueryGeoLocation ...
-func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int) (*models.GeoLocationResponse, int, error) {
+func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int, relation string) (*models.GeoLocationResponse, int, error) {
 	if geoLocation == nil || geoLocation.Type != "polygon" {
 		return nil, 0, errors.New("missing data")
 	}
 
 	path := api.url + "/" + indexName + "/_search"
 
-	query := buildGeoLocationQuery(*geoLocation)
+	query := buildGeoLocationQuery(*geoLocation, relation)
 
 	log.Event(ctx, "get documents based on geo polygon search", log.INFO, log.Data{"query": query, "path": path})
 
@@ -232,7 +232,7 @@ func (api *API) CallElastic(ctx context.Context, path, method string, payload in
 	return jsonBody, resp.StatusCode, nil
 }
 
-func buildGeoLocationQuery(geoLocation models.GeoLocation) models.GeoLocationRequest {
+func buildGeoLocationQuery(geoLocation models.GeoLocation, relation string) models.GeoLocationRequest {
 	return models.GeoLocationRequest{
 		Query: models.GeoLocationQuery{
 			Bool: models.BooleanObject{
@@ -243,7 +243,7 @@ func buildGeoLocationQuery(geoLocation models.GeoLocation) models.GeoLocationReq
 					Shape: models.GeoShape{
 						Location: models.GeoLocationObj{
 							Shape:    geoLocation,
-							Relation: "intersects",
+							Relation: relation,
 						},
 					},
 				},

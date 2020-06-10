@@ -1,5 +1,10 @@
 package models
 
+import (
+	"errors"
+	"strings"
+)
+
 type GeoDoc struct {
 	Name     string      `json:"name"`
 	Location GeoLocation `json:"location"`
@@ -72,4 +77,25 @@ type SearchResults struct {
 type SearchResult struct {
 	Name     string      `json:"name"`
 	Location GeoLocation `json:"location,omitempty"`
+}
+
+// ErrorInvalidRelationValue - return error
+func ErrorInvalidRelationValue(m string) error {
+	err := errors.New(`incorrect relation value: ` + m + `. It Should be either "within" or "intersects"`)
+	return err
+}
+
+var validRelation = map[string]bool{
+	"intersects": true,
+	"within":     true,
+}
+
+// ValidateRelation checks the requested relation value is a valid value
+func ValidateRelation(relation string) (string, error) {
+	r := strings.ToLower(relation)
+	if !validRelation[r] {
+		return "", ErrorInvalidRelationValue(relation)
+	}
+
+	return r, nil
 }

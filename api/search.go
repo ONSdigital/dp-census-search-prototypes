@@ -17,12 +17,14 @@ const (
 	defaultLimit    = 50
 	defaultOffset   = 0
 	defaultSegments = 30
+	defaultRelation = "within"
 
 	postcodeNotFound = "postcode not found"
 
 	internalError         = "internal server error"
 	exceedsDefaultMaximum = "the maximum offset has been reached, the offset cannot be more than"
 	invalidDistanceParam  = "invalid distance value"
+	invalidRelationParam  = "incorrect relation value"
 )
 
 func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) {
@@ -39,13 +41,15 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 	distance := r.FormValue("distance")
 	requestedLimit := r.FormValue("limit")
 	requestedOffset := r.FormValue("offset")
+	requestedRelation := r.FormValue("relation")
 
 	logData := log.Data{
-		"postcode":         lcPostcode,
-		"postcode_raw":     postcode,
-		"distance":         distance,
-		"requested_limit":  requestedLimit,
-		"requested_offset": requestedOffset,
+		"postcode":           lcPostcode,
+		"postcode_raw":       postcode,
+		"distance":           distance,
+		"requested_limit":    requestedLimit,
+		"requested_offset":   requestedOffset,
+		"requested_relation": requestedRelation,
 	}
 
 	log.Event(ctx, "getPostcodeSearch endpoint: incoming request", log.INFO, logData)
@@ -66,6 +70,16 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 		if err != nil {
 			log.Event(ctx, "getPostcodeSearch endpoint: request offset parameter error", log.ERROR, log.Error(err), logData)
 			setErrorCode(w, errs.ErrParsingQueryParameters)
+			return
+		}
+	}
+
+	relation := defaultRelation
+	if requestedRelation != "" {
+		relation, err = models.ValidateRelation(requestedRelation)
+		if err != nil {
+			log.Event(ctx, "getPostcodeSearch endpoint: request relation parameter error", log.ERROR, log.Error(err), logData)
+			setErrorCode(w, err)
 			return
 		}
 	}
@@ -129,7 +143,7 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// query dataset index with polygon search (intersect)
-	response, _, err := api.elasticsearch.QueryGeoLocation(ctx, api.datasetIndex, geoLocation, page.Limit, page.Offset)
+	response, _, err := api.elasticsearch.QueryGeoLocation(ctx, api.datasetIndex, geoLocation, page.Limit, page.Offset, relation)
 	if err != nil {
 		log.Event(ctx, "getPostcodeSearch endpoint: failed to query elastic search index", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, err)
@@ -180,6 +194,8 @@ func setErrorCode(w http.ResponseWriter, err error) {
 	case strings.Contains(err.Error(), exceedsDefaultMaximum):
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	case strings.Contains(err.Error(), invalidDistanceParam):
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	case strings.Contains(err.Error(), invalidRelationParam):
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	default:
 		http.Error(w, internalError, http.StatusInternalServerError)
