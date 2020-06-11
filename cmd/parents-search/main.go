@@ -20,7 +20,8 @@ import (
 var (
 	elasticSearchAPIURL = "http://localhost:9200"
 	indexName           = "test_geolocation"
-	filename            = "test"
+	filename            = "test-data/datasets"
+	mappingsFile        = "parent-mappings.json"
 )
 
 func main() {
@@ -38,16 +39,16 @@ func main() {
 			os.Exit(1)
 		}
 
-		log.Event(ctx, "failed to delete index as indeexe cannot be found, continuing", log.WARN, log.Error(err), log.Data{"status": status})
+		log.Event(ctx, "failed to delete index as index cannot be found, continuing", log.WARN, log.Error(err), log.Data{"status": status})
 	}
 
 	// create elasticsearch index with settings/mapping
-	status, err = esAPI.CreateSearchIndex(ctx, indexName)
+	status, err = esAPI.CreateSearchIndex(ctx, indexName, mappingsFile)
 	if err != nil {
 		log.Event(ctx, "failed to create index", log.ERROR, log.Error(err), log.Data{"status": status})
 		os.Exit(1)
 	}
-	// upload geo locations from test.csv and manipulate data into models.GeoDoc
+	// upload geo locations from data/datasets-test.csv and manipulate data into models.GeoDoc
 	if err = uploadDocs(ctx, esAPI, indexName, filename); err != nil {
 		log.Event(ctx, "failed to retrieve geo docs", log.ERROR, log.Error(err))
 		os.Exit(1)
