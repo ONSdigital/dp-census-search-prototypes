@@ -122,11 +122,33 @@ curl -XGET localhost:9200/test_postcode/_search  -H 'Content-Type: application/j
 }
 '
 ```
+2) Generate polygon shape boundary based on circle defined by postcode coordinate and distance.
 
-2) Find datasets within distance of coordinates (lat/long) retreived by query 1)
+3) Find datasets that are within the generated polygon circle:
 
 ```
-curl -XGET <TODO>
+curl -X GET "localhost:9200/test_geolocation/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+    "query":{
+        "bool": {
+            "must": {
+                "match_all": {}
+            },
+            "filter": {
+                "geo_shape": {
+                    "location": {
+                        "shape": {
+                            "type": "polygon",
+                            "coordinates" : [<generated polygon>]
+                        },
+                        "relation": "within"
+                    }
+                }
+            }
+        }
+    }
+}
+'
 ```
 
 ### Search API
