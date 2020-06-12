@@ -7,7 +7,9 @@ import (
 
 	errs "github.com/ONSdigital/dp-census-search-prototypes/apierrors"
 	"github.com/ONSdigital/dp-census-search-prototypes/models"
+	"github.com/ONSdigital/go-ns/request"
 	"github.com/ONSdigital/log.go/log"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -16,6 +18,57 @@ const (
 
 	boundaryFileNotFound = "boundary file does not exist by id"
 )
+
+func (api *SearchAPI) postParentSearch(w http.ResponseWriter, r *http.Request) {
+	defer request.DrainBody(r)
+
+	ctx := r.Context()
+
+	// Maybe remove logData?
+	logData := log.Data{
+		"request_body": r.Body,
+	}
+
+	geoLocation, err := models.CreateGeoLocation(r.Body)
+	if err != nil {
+		log.Event(ctx, "postParentSearch endpoint: request body has the wrong structure", log.ERROR, log.Error(err), logData)
+		setErrorCode(w, err)
+		return
+	}
+
+	if err = models.ValidateShape(geoLocation); err != nil {
+		log.Event(ctx, "postParentSearch endpoint: invalid boundary file", log.ERROR, log.Error(err), logData)
+		setErrorCode(w, err)
+		return
+	}
+
+	// create document
+	boundaryDoc := &models.BoundaryDoc{
+		ID:       uuid.UUID.String(uuid.New()),
+		Location: *geoLocation,
+	}
+
+	// Add doc to boundary index
+	if _, err = api.elasticsearch.AddBoundaryFile(ctx, api.boundaryFileIndex, boundaryDoc); err != nil {
+		log.Event(ctx, "postParentSearch endpoint: failed to upload document to index", log.ERROR, log.Error(err), logData)
+		setErrorCode(w, err)
+		return
+	}
+
+	b, err := json.Marshal(boundaryDoc)
+	if err != nil {
+		log.Event(ctx, "postParentSearch endpoint: failed to marshal boundary document", log.ERROR, log.Error(err), logData)
+		setErrorCode(w, errs.ErrInternalServer)
+		return
+	}
+
+	setJSONContentType(w)
+	_, err = w.Write(b)
+	if err != nil {
+		log.Event(ctx, "postParentSearch: error writing response", log.ERROR, log.Error(err), logData)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
 
 func (api *SearchAPI) getParentSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

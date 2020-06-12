@@ -62,8 +62,8 @@ func routes(ctx context.Context,
 		boundaryFileIndex: boundaryFileIndex,
 	}
 
-	// api.router.HandleFunc("/search/parent", api.postParentSearch).Methods("POST")
-	api.router.HandleFunc("/search/parent/{shape_id}", api.getParentSearch).Methods("GET")
+	api.router.HandleFunc("/search/parent", api.postParentSearch).Methods("POST")
+	api.router.HandleFunc("/search/parent/{id}", api.getParentSearch).Methods("GET")
 	api.router.HandleFunc("/search/postcodes/{postcode}", api.getPostcodeSearch).Methods("GET")
 
 	return &api
