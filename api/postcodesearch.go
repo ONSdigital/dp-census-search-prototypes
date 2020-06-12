@@ -161,9 +161,6 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 		searchResults.Items = append(searchResults.Items, doc)
 	}
 
-	// Do we need to do this?
-	// searchResults.Count = len(searchResults.Items)
-
 	b, err := json.Marshal(searchResults)
 	if err != nil {
 		log.Event(ctx, "getPostcodeSearch endpoint: failed to marshal search resource into bytes", log.ERROR, log.Error(err), logData)

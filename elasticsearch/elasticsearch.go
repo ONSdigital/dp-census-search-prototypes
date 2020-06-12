@@ -148,6 +148,42 @@ func (api *API) GetPostcodes(ctx context.Context, indexName, postcode string) (*
 	return response, status, nil
 }
 
+// GetBoundaryFile searches index for resource with id
+func (api *API) GetBoundaryFile(ctx context.Context, indexName, id string) (*models.BoundaryFileResponse, int, error) {
+	path := api.url + "/" + indexName + "/_search"
+
+	logData := log.Data{"id": id, "path": path}
+	log.Event(ctx, "get boundary file", log.INFO, logData)
+
+	body := models.BoundaryFileRequest{
+		Query: models.BoundaryFileQuery{
+			Term: models.BoundaryFileTerm{
+				ID: id,
+			},
+		},
+	}
+
+	bytes, err := json.Marshal(body)
+	if err != nil {
+		log.Event(ctx, "unable to marshal elastic search query to bytes", log.ERROR, log.Error(err), logData)
+		return nil, 0, errs.ErrMarshallingQuery
+	}
+
+	responseBody, status, err := api.CallElastic(ctx, path, "GET", bytes)
+	if err != nil {
+		return nil, status, err
+	}
+
+	response := &models.BoundaryFileResponse{}
+
+	if err = json.Unmarshal(responseBody, response); err != nil {
+		log.Event(ctx, "unable to unmarshal json body", log.ERROR, log.Error(err), logData)
+		return nil, status, errs.ErrUnmarshallingJSON
+	}
+
+	return response, status, nil
+}
+
 // QueryGeoLocation ...
 func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int, relation string) (*models.GeoLocationResponse, int, error) {
 	if geoLocation == nil || geoLocation.Type != "polygon" {

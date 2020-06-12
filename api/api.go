@@ -17,10 +17,11 @@ type SearchAPI struct {
 	router            *mux.Router
 	datasetIndex      string
 	postcodeIndex     string
+	boundaryFileIndex string
 }
 
 // CreateAndInitialiseSearchAPI manages all the routes configured to API
-func CreateAndInitialiseSearchAPI(ctx context.Context, bindAddr string, esAPI Elasticsearcher, defaultMaxResults int, datasetIndex, postcodeIndex string, errorChan chan error) {
+func CreateAndInitialiseSearchAPI(ctx context.Context, bindAddr string, esAPI Elasticsearcher, defaultMaxResults int, datasetIndex, postcodeIndex, boundaryFileIndex string, errorChan chan error) {
 
 	router := mux.NewRouter()
 	routes(ctx,
@@ -29,6 +30,7 @@ func CreateAndInitialiseSearchAPI(ctx context.Context, bindAddr string, esAPI El
 		defaultMaxResults,
 		datasetIndex,
 		postcodeIndex,
+		boundaryFileIndex,
 	)
 
 	httpServer = server.New(bindAddr, router)
@@ -49,7 +51,7 @@ func routes(ctx context.Context,
 	router *mux.Router,
 	elasticsearch Elasticsearcher,
 	defaultMaxResults int,
-	datasetIndex, postcodeIndex string) *SearchAPI {
+	datasetIndex, postcodeIndex, boundaryFileIndex string) *SearchAPI {
 
 	api := SearchAPI{
 		defaultMaxResults: defaultMaxResults,
@@ -57,8 +59,11 @@ func routes(ctx context.Context,
 		router:            router,
 		datasetIndex:      datasetIndex,
 		postcodeIndex:     postcodeIndex,
+		boundaryFileIndex: boundaryFileIndex,
 	}
 
+	// api.router.HandleFunc("/search/parent", api.postParentSearch).Methods("POST")
+	api.router.HandleFunc("/search/parent/{shape_id}", api.getParentSearch).Methods("GET")
 	api.router.HandleFunc("/search/postcodes/{postcode}", api.getPostcodeSearch).Methods("GET")
 
 	return &api

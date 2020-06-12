@@ -4,6 +4,7 @@ import "errors"
 
 // A list of error messages for Search API
 var (
+	ErrBoundaryFileNotFound   = errors.New("invalid id, boundary file does not exist")
 	ErrEmptyDistanceTerm      = errors.New("empty query term: distance")
 	ErrIndexNotFound          = errors.New("search index not found")
 	ErrInternalServer         = errors.New("internal server error")
@@ -14,7 +15,8 @@ var (
 	ErrUnexpectedStatusCode   = errors.New("unexpected status code from elastic api")
 
 	NotFoundMap = map[error]bool{
-		ErrPostcodeNotFound: true,
+		ErrBoundaryFileNotFound: true,
+		ErrPostcodeNotFound:     true,
 	}
 
 	BadRequestMap = map[error]bool{

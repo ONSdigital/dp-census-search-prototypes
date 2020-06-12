@@ -15,11 +15,11 @@ type CoordinatePoint struct {
 	Longitude float64 `json:"lon"`
 }
 
+// ------------------------------------------------------------------------
+
 type PostcodeRequest struct {
 	Query PostcodeQuery `json:"query"`
 }
-
-// ------------------------------------------------------------------------
 
 type PostcodeQuery struct {
 	Distance PostcodeTerm `json:"term"`
@@ -28,6 +28,8 @@ type PostcodeQuery struct {
 type PostcodeTerm struct {
 	Postcode string `json:"postcode"`
 }
+
+// ------------------------------------------------------------------------
 
 type PostcodeResponse struct {
 	Hits EmbededHits `json:"hits"`
@@ -42,9 +44,11 @@ type HitObj struct {
 }
 
 type Source struct {
-	Postcode    string `json:"postcode"`
-	RawPostcode string `json:"postcode_raw"`
-	Pin         Pin    `json:"pin"`
+	Postcode    string      `json:"postcode,omitempty"`
+	RawPostcode string      `json:"postcode_raw,omitempty"`
+	Pin         Pin         `json:"pin,omitempty"`
+	ID          string      `json:"id,omitempty"`
+	Location    GeoLocation `json:"location,omitempty"`
 }
 
 type Pin struct {
