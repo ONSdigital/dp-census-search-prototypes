@@ -5,25 +5,28 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/ONSdigital/dp-census-search-prototypes/config"
 	es "github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
 )
 
-var (
-	elasticSearchAPIURL = "http://localhost:9200"
-	indexName           = "test_boundary_files"
-	mappingsFile        = "boundary-file-mappings.json"
-)
+const mappingsFile = "boundary-file-mappings.json"
 
 func main() {
 	ctx := context.Background()
 
+	cfg, err := config.Get()
+	if err != nil {
+		log.Event(ctx, "failed to retrieve configuration", log.FATAL, log.Error(err))
+		os.Exit(1)
+	}
+
 	cli := dphttp.NewClient()
-	esAPI := es.NewElasticSearchAPI(cli, elasticSearchAPIURL)
+	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
 
 	// create elasticsearch index with settings/mapping
-	status, err := esAPI.CreateSearchIndex(ctx, indexName, mappingsFile)
+	status, err := esAPI.CreateSearchIndex(ctx, cfg.BoundaryFileIndex, mappingsFile)
 	if err != nil {
 		if status != http.StatusBadRequest {
 			log.Event(ctx, "failed to create index", log.ERROR, log.Error(err), log.Data{"status": status})

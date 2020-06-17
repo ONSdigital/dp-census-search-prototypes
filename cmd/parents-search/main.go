@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ONSdigital/dp-census-search-prototypes/config"
 	"github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	es "github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	"github.com/ONSdigital/dp-census-search-prototypes/models"
@@ -17,22 +18,25 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-var (
-	elasticSearchAPIURL = "http://localhost:9200"
-	indexName           = "test_geolocation"
-	filename            = "test-data/datasets"
-	mappingsFile        = "parent-mappings.json"
-)
+var filename = "test-data/datasets"
+
+const mappingsFile = "parent-mappings.json"
 
 func main() {
 	ctx := context.Background()
 	filename = filename + ".csv"
 
+	cfg, err := config.Get()
+	if err != nil {
+		log.Event(ctx, "failed to retrieve configuration", log.FATAL, log.Error(err))
+		os.Exit(1)
+	}
+
 	cli := dphttp.NewClient()
-	esAPI := es.NewElasticSearchAPI(cli, elasticSearchAPIURL)
+	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
 
 	// delete existing elasticsearch index if already exists
-	status, err := esAPI.DeleteSearchIndex(ctx, indexName)
+	status, err := esAPI.DeleteSearchIndex(ctx, cfg.DatasetIndex)
 	if err != nil {
 		if status != http.StatusNotFound {
 			log.Event(ctx, "failed to delete index", log.ERROR, log.Error(err), log.Data{"status": status})
@@ -43,13 +47,13 @@ func main() {
 	}
 
 	// create elasticsearch index with settings/mapping
-	status, err = esAPI.CreateSearchIndex(ctx, indexName, mappingsFile)
+	status, err = esAPI.CreateSearchIndex(ctx, cfg.DatasetIndex, mappingsFile)
 	if err != nil {
 		log.Event(ctx, "failed to create index", log.ERROR, log.Error(err), log.Data{"status": status})
 		os.Exit(1)
 	}
 	// upload geo locations from data/datasets-test.csv and manipulate data into models.GeoDoc
-	if err = uploadDocs(ctx, esAPI, indexName, filename); err != nil {
+	if err = uploadDocs(ctx, esAPI, cfg.DatasetIndex, filename); err != nil {
 		log.Event(ctx, "failed to retrieve geo docs", log.ERROR, log.Error(err))
 		os.Exit(1)
 	}
