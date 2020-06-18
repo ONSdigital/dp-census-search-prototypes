@@ -168,6 +168,7 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 	}
 
 	setJSONContentType(w)
+	setAccessControl(w)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Event(ctx, "error writing response", log.ERROR, log.Error(err), logData)
@@ -179,6 +180,9 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 
 func setJSONContentType(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
+}
+func setAccessControl(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func setErrorCode(w http.ResponseWriter, err error) {
