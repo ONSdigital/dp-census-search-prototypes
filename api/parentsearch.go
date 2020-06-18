@@ -63,6 +63,7 @@ func (api *SearchAPI) postParentSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setJSONContentType(w)
+	setAccessControl(w)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Event(ctx, "postParentSearch: error writing response", log.ERROR, log.Error(err), logData)
