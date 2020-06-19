@@ -7,6 +7,7 @@ import (
 // Config is the filing resource handler config
 type Config struct {
 	BindAddr                  string `envconfig:"BIND_ADDR"                  json:"-"`
+	BoundaryFileIndex         string `envconfig:"BOUNDARY_FILE_INDEX"`
 	ElasticSearchAPIURL       string `envconfig:"ELASTIC_SEARCH_URL"         json:"-"`
 	DatasetIndex              string `envconfig:"DATASET_INDEX"`
 	MaxSearchResultsOffset    int    `envconfig:"MAX_SEARCH_RESULTS_OFFSET"`
@@ -24,6 +25,7 @@ func Get() (*Config, error) {
 
 	cfg = &Config{
 		BindAddr:                  ":10000",
+		BoundaryFileIndex:         "test_boundary_files",
 		ElasticSearchAPIURL:       "http://localhost:9200",
 		DatasetIndex:              "test_geolocation",
 		MaxSearchResultsOffset:    1000,

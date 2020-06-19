@@ -156,7 +156,9 @@ curl -X GET "localhost:9200/test_geolocation/_search?pretty" -H 'Content-Type: a
 All prototypes developed will exist on an endpoint in the search API. These include:
 
 - Search by Postcodes - endpoint: GET `/search/postcodes/{postcode}`
-- TODO - Search for parent docs via geo boundary file `search/by-boundaries`
+- Search for parent docs via geo boundary file:
+    - POST `search/parent` with shape file
+    - GET `search/parent/{shape_id}`
 
 See [swagger spec](swagger.yaml) for documentation of how to use each endpoint on the API. Copy yaml into [swagger editor](https://editor.swagger.io/) (left panel) to generate a pretty web ui on the right to navigate documentaion.
 
@@ -177,4 +179,10 @@ Follow swagger documentation on how to interact with local api, some examples ar
 ```
 curl -XGET localhost:10000/search/postcodes/BR33DA?distance=5,miles
 curl -XGET localhost:10000/search/postcodes/cf244ny?distance=0.5,km&relation=intersects
+
+curl -XPOST localhost:10000/search/parent -d'{
+  "type": "polygon",
+  "coordinates": [[[-3.232257,51.507306],[-3.128257,51.500306],[-3.13684,51.467704],[-3.2085046,51.4520104],[-3.232257,51.507306]]]
+}'
+curl -XGET localhost:10000/search/parent/{shape_id}
 ```

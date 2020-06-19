@@ -48,7 +48,7 @@ func run(ctx context.Context) error {
 
 	apiErrors := make(chan error, 1)
 
-	api.CreateAndInitialiseSearchAPI(ctx, cfg.BindAddr, esAPI, cfg.MaxSearchResultsOffset, cfg.DatasetIndex, cfg.PostcodeIndex, apiErrors)
+	api.CreateAndInitialiseSearchAPI(ctx, cfg.BindAddr, esAPI, cfg.MaxSearchResultsOffset, cfg.DatasetIndex, cfg.PostcodeIndex, cfg.BoundaryFileIndex, apiErrors)
 
 	// block until a fatal error occurs
 	select {

@@ -148,6 +148,65 @@ func (api *API) GetPostcodes(ctx context.Context, indexName, postcode string) (*
 	return response, status, nil
 }
 
+// AddBoundaryFile adds a document to an elasticsearch index
+func (api *API) AddBoundaryFile(ctx context.Context, indexName string, boundaryDoc *models.BoundaryDoc) (int, error) {
+	if boundaryDoc == nil || boundaryDoc.ID == "" {
+		return 0, errors.New("missing data")
+	}
+
+	log.Event(ctx, "adding boundary doc", log.INFO, log.Data{"id": boundaryDoc.ID})
+
+	path := api.url + "/" + indexName + "/_doc"
+
+	bytes, err := json.Marshal(boundaryDoc)
+	if err != nil {
+		return 0, err
+	}
+
+	_, status, err := api.CallElastic(ctx, path, "POST", bytes)
+	if err != nil {
+		return status, err
+	}
+
+	return status, nil
+}
+
+// GetBoundaryFile searches index for resource with id
+func (api *API) GetBoundaryFile(ctx context.Context, indexName, id string) (*models.BoundaryFileResponse, int, error) {
+	path := api.url + "/" + indexName + "/_search"
+
+	logData := log.Data{"id": id, "path": path}
+	log.Event(ctx, "get boundary file", log.INFO, logData)
+
+	body := models.BoundaryFileRequest{
+		Query: models.BoundaryFileQuery{
+			Term: models.BoundaryFileTerm{
+				ID: id,
+			},
+		},
+	}
+
+	bytes, err := json.Marshal(body)
+	if err != nil {
+		log.Event(ctx, "unable to marshal elastic search query to bytes", log.ERROR, log.Error(err), logData)
+		return nil, 0, errs.ErrMarshallingQuery
+	}
+
+	responseBody, status, err := api.CallElastic(ctx, path, "GET", bytes)
+	if err != nil {
+		return nil, status, err
+	}
+
+	response := &models.BoundaryFileResponse{}
+
+	if err = json.Unmarshal(responseBody, response); err != nil {
+		log.Event(ctx, "unable to unmarshal json body", log.ERROR, log.Error(err), logData)
+		return nil, status, errs.ErrUnmarshallingJSON
+	}
+
+	return response, status, nil
+}
+
 // QueryGeoLocation ...
 func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int, relation string) (*models.GeoLocationResponse, int, error) {
 	if geoLocation == nil || geoLocation.Type != "polygon" {
