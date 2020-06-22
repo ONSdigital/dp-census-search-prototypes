@@ -8,8 +8,9 @@ import (
 type Config struct {
 	BindAddr                  string `envconfig:"BIND_ADDR"                  json:"-"`
 	BoundaryFileIndex         string `envconfig:"BOUNDARY_FILE_INDEX"`
-	ElasticSearchAPIURL       string `envconfig:"ELASTIC_SEARCH_URL"         json:"-"`
 	DatasetIndex              string `envconfig:"DATASET_INDEX"`
+	ElasticSearchAPIURL       string `envconfig:"ELASTIC_SEARCH_URL"         json:"-"`
+	GeoFileIndex              string `envconfig:"GEOFILE_INDEX"`
 	MaxSearchResultsOffset    int    `envconfig:"MAX_SEARCH_RESULTS_OFFSET"`
 	PostcodeIndex             string `envconfig:"POSTCODE_INDEX"`
 	SignElasticsearchRequests bool   `envconfig:"SIGN_ELASTICSEARCH_REQUESTS"`
@@ -26,8 +27,9 @@ func Get() (*Config, error) {
 	cfg = &Config{
 		BindAddr:                  ":10000",
 		BoundaryFileIndex:         "test_boundary_files",
-		ElasticSearchAPIURL:       "http://localhost:9200",
 		DatasetIndex:              "test_geolocation",
+		ElasticSearchAPIURL:       "http://localhost:9200",
+		GeoFileIndex:              "test_geo",
 		MaxSearchResultsOffset:    1000,
 		PostcodeIndex:             "test_postcode",
 		SignElasticsearchRequests: false,

@@ -10,6 +10,8 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/paulmach/go.geojson v1.4.0 // indirect
 	github.com/smartystreets/assertions v1.0.1 // indirect
 	github.com/smartystreets/goconvey v1.6.4
+	github.com/tamerh/jsparser v1.4.0
 )

@@ -67,16 +67,28 @@ type HitList struct {
 
 // SearchResults represents a structure for a list of returned objects
 type SearchResults struct {
-	Count  int            `json:"count"`
-	Items  []SearchResult `json:"items"`
-	Limit  int            `json:"limit"`
-	Offset int            `json:"offset"`
+	Count      int            `json:"count"`
+	Items      []SearchResult `json:"items"`
+	Limit      int            `json:"limit"`
+	Offset     int            `json:"offset"`
+	TotalCount int            `json:"total_count"`
 }
 
 // SearchResult represents data on a single item of search results
 type SearchResult struct {
-	Name     string      `json:"name"`
-	Location GeoLocation `json:"location,omitempty"`
+	Name         string  `json:"name"`
+	Code         string  `json:"code"`
+	Hierarchy    string  `json:"hierarchy"`
+	LSOA11NM     string  `json:"lsoa11nm,omitempty"`
+	LSOA11NMW    string  `json:"lsoa11nmw,omitempty"`
+	MSOA11NM     string  `json:"msoa11nm,omitempty"`
+	MSOA11NMW    string  `json:"msoa11nmw,omitempty"`
+	ShapeArea    float64 `json:"shape_area,omitempty"`
+	ShapeLength  float64 `json:"shape_length,omitempty"`
+	StatedArea   float64 `json:"stated_area,omitempty"`
+	StatedLength float64 `json:"stated_length,omitempty"`
+	TCITY15NM    string  `json:"tcity15nm,omitempty"`
+	// Location    GeoLocation `json:"location,omitempty"`
 }
 
 // ErrorInvalidRelationValue - return error

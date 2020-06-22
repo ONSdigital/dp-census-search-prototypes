@@ -23,6 +23,7 @@ func main() {
 	}
 
 	cli := dphttp.NewClient()
+
 	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
 
 	// create elasticsearch index with settings/mapping

@@ -17,6 +17,8 @@
 # Files we dont want to be upladed
 NSPL_FEB_2020_UK
 build
+geojson/*
+!geojson/.gitkeep
 
 # Generated assets
 *bindata.go
