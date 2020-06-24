@@ -19,6 +19,7 @@ NSPL_FEB_2020_UK
 build
 geojson/*
 !geojson/.gitkeep
+*.tar.gz
 
 # Generated assets
 *bindata.go

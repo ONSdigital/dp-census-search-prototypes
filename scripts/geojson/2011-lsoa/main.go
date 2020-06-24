@@ -11,7 +11,6 @@ import (
 	"time"
 
 	errs "github.com/ONSdigital/dp-census-search-prototypes/apierrors"
-	"github.com/ONSdigital/dp-census-search-prototypes/config"
 	es "github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	"github.com/ONSdigital/dp-census-search-prototypes/scripts/geojson/models"
 	dphttp "github.com/ONSdigital/dp-net/http"
@@ -20,34 +19,30 @@ import (
 )
 
 const (
-	mappingsFile = "geography-mappings.json"
-	geoJSONPath  = "../geojson/"
+	elasticsearchAPIURL = "http://localhost:9200"
+	features            = "features"
+	geoFileIndex        = "test_geo"
+	geoJSONPath         = "../geojson/"
 )
-
-var geojsonfiles = []string{
-	"Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_EW_BFC.geojson",
-	"Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_EW_BFE.geojson",
-	"Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_EW_BGC.geojson",
-	"Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_EW_BSC.geojson",
-}
 
 var (
 	countCh             = make(chan int)
 	polygonCountCh      = make(chan int)
 	multiPolygonCountCh = make(chan int)
+
+	geojsonfiles = []string{
+		"Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_EW_BFC.geojson",
+		"Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_EW_BFE.geojson",
+		"Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_EW_BGC.geojson",
+		"Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_EW_BSC.geojson",
+	}
 )
 
 func main() {
 	ctx := context.Background()
 
-	cfg, err := config.Get()
-	if err != nil {
-		log.Event(ctx, "failed to retrieve configuration", log.FATAL, log.Error(err))
-		os.Exit(1)
-	}
-
 	cli := dphttp.NewClient()
-	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
+	esAPI := es.NewElasticSearchAPI(cli, elasticsearchAPIURL)
 
 	go trackCounts(ctx)
 
@@ -62,18 +57,18 @@ func main() {
 		}
 
 		br := bufio.NewReaderSize(f, 65536)
-		parser := jsparser.NewJSONParser(br, "features")
+		parser := jsparser.NewJSONParser(br, features)
 
 		log.Event(ctx, "about to store docs in elastic search", log.INFO)
 
 		// Iterate items for individual geo boundaries and store documents in elasticsearch
-		if err = storeDocs(ctx, esAPI, cfg.GeoFileIndex, parser); err != nil {
+		if err = storeDocs(ctx, esAPI, geoFileIndex, parser); err != nil {
 			log.Event(ctx, "failed to store lsoa data in elasticsearch", log.FATAL, log.Error(err))
 			os.Exit(1)
 		}
 	}
 
-	log.Event(ctx, "successfully added 2011 lsoa data to "+cfg.GeoFileIndex+" index", log.INFO)
+	log.Event(ctx, "successfully added 2011 lsoa data to "+geoFileIndex+" index", log.INFO)
 }
 
 func trackCounts(ctx context.Context) {
