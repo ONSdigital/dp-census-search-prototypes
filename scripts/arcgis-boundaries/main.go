@@ -18,7 +18,7 @@ import (
 
 const (
 	elasticsearchAPIURL = "http://localhost:9200"
-	geoFileIndex        = "test_geo"
+	geoFileIndex        = "test_arcgis"
 	lsoaURL             = "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA_DEC_2011_EW_BFC/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=json"
 	mappingsFile        = "geography-mappings.json"
 )

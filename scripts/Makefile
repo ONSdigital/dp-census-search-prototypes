@@ -11,6 +11,7 @@ TCITY=2015-tcity
 GEOJSON=geojson
 ARCGIS=arcgis-boundaries
 LOAD_POSTCODES=load-postcodes
+LOAD_PARENT_DOCS=load-parent-docs
 
 build:
 	go generate ../...
@@ -46,7 +47,11 @@ postcode: build
 	go build -o ../$(BUILD)/$(BIN_DIR)/$(LOAD_POSTCODES) $(LOAD_POSTCODES)/main.go
 	HUMAN_LOG=1 go run -race $(LOAD_POSTCODES)/main.go
 
+parent: build
+	go build -o ../$(BUILD)/$(BIN_DIR)/$(LOAD_PARENT_DOCS) $(LOAD_PARENT_DOCS)/main.go
+	HUMAN_LOG=1 go run -race $(LOAD_PARENT_DOCS)/main.go
+
 test:
 	go test -cover -race ./...
 
-.PHONY: build geojson lsoa msoa tcity refresh test
+.PHONY: build postcode parent arcgis geojson lsoa msoa tcity refresh test
