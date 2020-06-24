@@ -4,7 +4,6 @@ BUILD=build
 BIN_DIR?=.
 
 PARENT_SEARCH=parents-search
-POSTCODE_SEARCH=postcode-search
 SEARCH_API=search-api
 INDEX_CREATION=boundary-file-index
 
@@ -15,9 +14,6 @@ build:
 parentsearchbuild: build
 	go build -o $(BUILD)/$(BIN_DIR)/$(PARENT_SEARCH) cmd/$(PARENT_SEARCH)/main.go
 
-postcodesearchbuild: build
-	go build -o $(BUILD)/$(BIN_DIR)/$(POSTCODE_SEARCH) cmd/$(POSTCODE_SEARCH)/main.go
-
 boundaryindexbuild: build
 	go build -o $(BUILD)/$(BIN_DIR)/$(INDEX_CREATION) cmd/$(INDEX_CREATION)/main.go
 
@@ -26,9 +22,6 @@ apibuild: build
 
 parentsearch: parentsearchbuild
 	HUMAN_LOG=1 go run -race cmd/$(PARENT_SEARCH)/main.go
-
-postcodesearch: postcodesearchbuild
-	HUMAN_LOG=1 go run -race cmd/$(POSTCODE_SEARCH)/main.go
 
 boundaryindex: boundaryindexbuild
 	HUMAN_LOG=1 go run -race cmd/$(INDEX_CREATION)/main.go

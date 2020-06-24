@@ -10,6 +10,7 @@ OA=2011-oa
 TCITY=2015-tcity
 GEOJSON=geojson
 ARCGIS=arcgis-boundaries
+LOAD_POSTCODES=load-postcodes
 
 build:
 	go generate ../...
@@ -40,6 +41,10 @@ geojson: refreshgeojson lsoa msoa tcity oa
 arcgis: build
 	go build -o ../$(BUILD)/$(BIN_DIR)/$(ARCGIS) $(ARCGIS)/main.go
 	HUMAN_LOG=1 go run -race $(ARCGIS)/main.go
+
+postcode: build
+	go build -o ../$(BUILD)/$(BIN_DIR)/$(LOAD_POSTCODES) $(LOAD_POSTCODES)/main.go
+	HUMAN_LOG=1 go run -race $(LOAD_POSTCODES)/main.go
 
 test:
 	go test -cover -race ./...
