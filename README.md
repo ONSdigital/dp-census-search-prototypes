@@ -90,6 +90,34 @@ curl -X GET "localhost:9200/test_parent/_search?pretty" -H 'Content-Type: applic
 '
 ```
 
+3) Demonstration using a multipolygon search:
+
+
+```
+curl -X GET "localhost:9200/test_parent/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+    "query":{
+        "bool": {
+            "must": {
+                "match_all": {}
+            },
+            "filter": {
+                "geo_shape": {
+                    "location": {
+                        "shape": {
+                            "type": "multipolygon",
+                            "coordinates" : [[[[-3.18280,51.4963], [-3.1780,51.5003], [-3.1640,51.4943], [-3.1750,51.4883], [-3.18280,51.4963]]]]
+                        },
+                        "relation": "intersects"
+                    }
+                }
+            }
+        }
+    }
+}
+'
+```
+
 Intersects will find all boundaries which cross over with the polygon above - scoring is equal so cannot distinguish smaller areas which should be higher in the list then larger areas, e.g. Cathays, Roath, Cardiff then Wales.
 
 ### Postcode Search with Distance

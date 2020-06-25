@@ -167,7 +167,10 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		log.Event(ctx, "getPostcodeSearch endpoint: failed to marshal search resource into bytes", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, errs.ErrInternalServer)
+		return
 	}
+
+	w.WriteHeader(http.StatusCreated)
 
 	setJSONContentType(w)
 	setAccessControl(w)
