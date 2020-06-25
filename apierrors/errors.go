@@ -21,7 +21,7 @@ var (
 	ErrUnableToParseJSON       = errors.New("failed to parse json body")
 	ErrUnableToReadMessage     = errors.New("failed to read message body")
 	ErrUnexpectedStatusCode    = errors.New("unexpected status code from elastic api")
-	ErrUnmarshallingJSON       = errors.New("failed to parse json body")
+	ErrUnmarshallingJSON       = errors.New("failed to unmarshal data")
 
 	NotFoundMap = map[error]bool{
 		ErrBoundaryFileNotFound: true,

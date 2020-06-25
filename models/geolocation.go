@@ -88,7 +88,12 @@ type SearchResult struct {
 	StatedArea   float64 `json:"stated_area,omitempty"`
 	StatedLength float64 `json:"stated_length,omitempty"`
 	TCITY15NM    string  `json:"tcity15nm,omitempty"`
-	// Location    GeoLocation `json:"location,omitempty"`
+	// Location     OutputGeoLocation `json:"location,omitempty"`
+}
+
+type OutputGeoLocation struct {
+	Type        string      `json:"type"`
+	Coordinates interface{} `json:"coordinates"`
 }
 
 // ErrorInvalidRelationValue - return error
