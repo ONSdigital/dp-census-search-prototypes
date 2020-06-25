@@ -67,7 +67,7 @@ func main() {
 	log.Event(ctx, "successfully got geo docs, see data", log.INFO)
 }
 
-func callArcGis(ctx context.Context, url string) (*GeoDocs, error) {
+func callArcGis(ctx context.Context, url string) (*geoDocs, error) {
 	logData := log.Data{"url": url}
 
 	resp, err := http.Get(url)
@@ -103,72 +103,72 @@ func trackCounts(ctx context.Context) {
 	}
 }
 
-type GeoDocs struct {
-	Items []GeoDoc `json:"features"`
+type geoDocs struct {
+	items []geoDoc `json:"features"`
 }
 
-type GeoDoc struct {
-	Name        string        `json:"name"`
-	Code        string        `json:"code"`
-	LSOA11NM    string        `json:"lsoa11nm"`
-	LSOA11NMW   string        `json:"lsoa11nmw"`
-	ShapeArea   float64       `json:"shape_area"`
-	ShapeLength float64       `json:"shape_length"`
-	Location    GeoLocation   `json:"location"`
-	Attributes  *AttributeDoc `json:"attributes, omitempty`
-	Geometry    *GeometryDoc  `json:"geometry", omitempty`
+type geoDoc struct {
+	name        string        `json:"name"`
+	code        string        `json:"code"`
+	lsoa11nm    string        `json:"lsoa11nm"`
+	lsoa11nmw   string        `json:"lsoa11nmw"`
+	shapeArea   float64       `json:"shape_area"`
+	shapeLength float64       `json:"shape_length"`
+	location    geoLocation   `json:"location"`
+	attributes  *attributeDoc `json:"attributes,omitempty`
+	geometry    *geometryDoc  `json:"geometry",omitempty`
 }
 
-type GeoLocation struct {
-	Type        string        `json:"type"`
-	Coordinates [][][]float64 `json:"coordinates"`
+type geoLocation struct {
+	gtype       string        `json:"type"`
+	coordinates [][][]float64 `json:"coordinates"`
 }
 
-type AttributeDoc struct {
-	Code        string  `json:"LSOA11CD"`
-	LSOA11NM    string  `json:"LSOA11NM"`
-	LSOA11NMW   string  `json:"LSOA11NMW"`
-	ShapeArea   float64 `json:"Shape__Area"`
-	ShapeLength float64 `json:"Shape__Length"`
+type attributeDoc struct {
+	code        string  `json:"LSOA11CD"`
+	lsoa11nm    string  `json:"LSOA11NM"`
+	lsoa11nmw   string  `json:"LSOA11NMW"`
+	shapeArea   float64 `json:"Shape__Area"`
+	shapeLength float64 `json:"Shape__Length"`
 }
 
-type GeometryDoc struct {
-	Coordinates [][][]float64 `json:"rings"`
+type geometryDoc struct {
+	coordinates [][][]float64 `json:"rings"`
 }
 
-func createGeoDoc(reader io.Reader) (*GeoDocs, error) {
+func createGeoDoc(reader io.Reader) (*geoDocs, error) {
 	b, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, errs.ErrUnableToReadMessage
 	}
 
-	var geoDocs GeoDocs
+	var docs geoDocs
 
-	err = json.Unmarshal(b, &geoDocs)
+	err = json.Unmarshal(b, &docs)
 	if err != nil {
 		return nil, errs.ErrUnableToParseJSON
 	}
-	return &geoDocs, nil
+	return &docs, nil
 }
 
-func storeDocs(ctx context.Context, esAPI *es.API, indexName string, docs *GeoDocs) (err error) {
+func storeDocs(ctx context.Context, esAPI *es.API, indexName string, docs *geoDocs) (err error) {
 	count := 0
 	var geoDocs []interface{}
 
 	// Iterate through the records
-	for _, doc := range docs.Items {
+	for _, doc := range docs.items {
 		count++
 
-		newDoc := &GeoDoc{
-			Code:        doc.Attributes.Code,
-			Name:        doc.Attributes.LSOA11NM,
-			LSOA11NM:    doc.Attributes.LSOA11NM,
-			LSOA11NMW:   doc.Attributes.LSOA11NMW,
-			ShapeArea:   doc.Attributes.ShapeArea,
-			ShapeLength: doc.Attributes.ShapeLength,
-			Location: GeoLocation{
-				Type:        "polygon",
-				Coordinates: doc.Geometry.Coordinates,
+		newDoc := &geoDoc{
+			code:        doc.attributes.code,
+			name:        doc.attributes.lsoa11nm,
+			lsoa11nm:    doc.attributes.lsoa11nm,
+			lsoa11nmw:   doc.attributes.lsoa11nmw,
+			shapeArea:   doc.attributes.shapeArea,
+			shapeLength: doc.attributes.shapeLength,
+			location: geoLocation{
+				gtype:       "polygon",
+				coordinates: doc.geometry.coordinates,
 			},
 		}
 
