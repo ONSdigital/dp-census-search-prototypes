@@ -226,7 +226,11 @@ func (api *API) GetBoundaryFile(ctx context.Context, indexName, id string) (*mod
 
 // QueryGeoLocation ...
 func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int, relation string) (*models.GeoLocationResponse, int, error) {
-	if geoLocation == nil || geoLocation.Type != "polygon" {
+	if geoLocation == nil {
+		return nil, 0, errors.New("missing data")
+	}
+
+	if geoLocation.Type != "polygon" && geoLocation.Type != "multipolygon" {
 		return nil, 0, errors.New("missing data")
 	}
 

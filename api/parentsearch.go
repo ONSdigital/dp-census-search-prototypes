@@ -62,6 +62,8 @@ func (api *SearchAPI) postParentSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
+
 	setJSONContentType(w)
 	setAccessControl(w)
 	_, err = w.Write(b)
