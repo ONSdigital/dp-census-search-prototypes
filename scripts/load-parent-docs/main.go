@@ -93,6 +93,7 @@ func uploadDocs(ctx context.Context, esAPI *elasticsearch.API, indexName, filena
 			log.Event(ctx, "failed to read row", log.ERROR, log.Error(err))
 		}
 
+		var geometry [][][]float64
 		var coordinates [][]float64
 
 		for i, value := range row {
@@ -109,14 +110,15 @@ func uploadDocs(ctx context.Context, esAPI *elasticsearch.API, indexName, filena
 			coordinates = append(coordinates, coordinate)
 		}
 
+		geometry = append(geometry, coordinates)
+
 		geoDoc := &models.GeoDoc{
 			Name: row[0],
 			Location: models.GeoLocation{
-				Type: "Polygon",
+				Type:        "Polygon",
+				Coordinates: geometry,
 			},
 		}
-
-		geoDoc.Location.Coordinates = append(geoDoc.Location.Coordinates, coordinates)
 
 		if _, err = esAPI.AddGeoLocation(ctx, indexName, geoDoc); err != nil {
 			log.Event(ctx, "failed to upload document to index", log.ERROR, log.Error(err), log.Data{"count": count})

@@ -5,30 +5,25 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ONSdigital/dp-census-search-prototypes/config"
 	es "github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
 )
 
 const (
-	mappingsFile = "geography-mappings.json"
+	elasticsearchAPIURL = "http://localhost:9200"
+	geoFileIndex        = "test_geo"
+	mappingsFile        = "geography-mappings.json"
 )
 
 func main() {
 	ctx := context.Background()
 
-	cfg, err := config.Get()
-	if err != nil {
-		log.Event(ctx, "failed to retrieve configuration", log.FATAL, log.Error(err))
-		os.Exit(1)
-	}
-
 	cli := dphttp.NewClient()
-	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
+	esAPI := es.NewElasticSearchAPI(cli, elasticsearchAPIURL)
 
 	// delete existing elasticsearch index if already exists
-	status, err := esAPI.DeleteSearchIndex(ctx, cfg.GeoFileIndex)
+	status, err := esAPI.DeleteSearchIndex(ctx, geoFileIndex)
 	if err != nil {
 		if status != http.StatusNotFound {
 			log.Event(ctx, "failed to delete index", log.ERROR, log.Error(err), log.Data{"status": status})
@@ -39,11 +34,11 @@ func main() {
 	}
 
 	// create elasticsearch index with settings/mapping
-	status, err = esAPI.CreateSearchIndex(ctx, cfg.GeoFileIndex, mappingsFile)
+	status, err = esAPI.CreateSearchIndex(ctx, geoFileIndex, mappingsFile)
 	if err != nil {
 		log.Event(ctx, "failed to create index", log.ERROR, log.Error(err), log.Data{"status": status})
 		os.Exit(1)
 	}
 
-	log.Event(ctx, "successfully refreshed "+cfg.GeoFileIndex+" index", log.INFO)
+	log.Event(ctx, "successfully refreshed "+geoFileIndex+" index", log.INFO)
 }
