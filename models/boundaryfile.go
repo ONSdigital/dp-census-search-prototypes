@@ -96,8 +96,46 @@ func ValidateShapeFile(gType string, shapeFile interface{}) error {
 	}
 
 	if gType == "multipolygon" {
+		geometry := shapeFile.([][][][]float64)
 
-		// geometry := shapeFile.([][][][]float64)
+		for _, polygons := range geometry {
+			if polygons == nil || len(polygons) < 1 {
+				return errs.ErrEmptyShape
+			}
+
+			if len(polygons) < 2 {
+				return errs.ErrLessThanTwoPolygons
+			}
+
+			for _, shape := range polygons {
+				if shape == nil || len(shape) < 1 {
+					return errs.ErrEmptyShape
+				}
+
+				if len(shape) < 4 {
+					return errs.ErrLessThanFourCoordinates
+				}
+
+				lastIndex := 0
+				for i, coordinates := range shape {
+					if coordinates == nil {
+						return errs.ErrEmptyCoordinates
+					}
+
+					// Check coordinates have exactly two values, lat/long
+					if len(coordinates) != 2 {
+						return errs.ErrInvalidCoordinates
+					}
+
+					lastIndex = i
+				}
+
+				// Check first and last coordinate are the same
+				if shape[0][0] != shape[lastIndex][0] || shape[0][1] != shape[lastIndex][1] {
+					return errs.ErrInvalidShape
+				}
+			}
+		}
 	}
 
 	if gType == "polygon" {
