@@ -185,12 +185,57 @@ components:
     SearchResponse:
       description: "An individual result (dataset) of the postcode search"
       type: object
-      required: ["name", "location"]
+      required: ["name", "code", "hierarchy"]
       properties:
         name:
           type: string
           description: "The name of the geographical location of the dataset."
           example: "Wales"
+        code:
+          type: string
+          description: "The code representing the geographical location."
+        hierarchy: 
+          type: string
+          description: "The geographical hierarchy level"
+          enum: [
+            "Lower Layer Super Output Areas",
+            "Middle Layer Super Output Areas",
+            "Output Areas",
+            "Major Towns and Cities"
+          ]
+        lsoa11nm:
+          type: string
+          description: "Name of the lower layer super output area, not sure how it differs from lsoa1nmw ☃"
+        lsoa11nmw:
+          type: string
+          description: "Name of the lower layer super output area, not sure how it differs from lsoa1nm ☃"
+        msoa11nm:
+          type: string
+          description: "Name of the middle layer super output area, not sure how it differs from lsoa1nmw ☃"
+        msoa11nmw:
+          type: string
+          description: "Name of the middle layer super output area, not sure how it differs from lsoa1nm ☃"
+        lad11cd:
+          type: string
+          description: "Code representing the local authority code"
+        oa11cd:
+          type: string
+          description: "Code representing the output area"
+        tcity15nm:  
+          type: string
+          description: "Name of the town or city"
+        shape_area:  
+          type: string
+          description: "☃"
+        shape_length:  
+          type: string
+          description: "☃"
+        stated_area:  
+          type: string
+          description: "☃"
+        stated_length:  
+          type: string
+          description: "☃"
         location:
           $ref: '#/components/schemas/Location'
     Location:
@@ -207,6 +252,7 @@ components:
           description: "The type of shape of the geographical boundary."
           type: string
           enum: [
+            "Multipolygon",
             "Polygon"
           ]
     Shape:

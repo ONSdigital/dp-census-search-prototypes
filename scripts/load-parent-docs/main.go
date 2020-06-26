@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/dp-census-search-prototypes/config"
 	"github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	es "github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	"github.com/ONSdigital/dp-census-search-prototypes/models"
@@ -18,25 +17,23 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-var filename = "test-data/datasets"
+const (
+	elasticsearchAPIURL = "http://localhost:9200"
+	datasetIndex        = "test_parent"
+	mappingsFile        = "parent-mappings.json"
+)
 
-const mappingsFile = "parent-mappings.json"
+var filename = "test-data/datasets"
 
 func main() {
 	ctx := context.Background()
 	filename = filename + ".csv"
 
-	cfg, err := config.Get()
-	if err != nil {
-		log.Event(ctx, "failed to retrieve configuration", log.FATAL, log.Error(err))
-		os.Exit(1)
-	}
-
 	cli := dphttp.NewClient()
-	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
+	esAPI := es.NewElasticSearchAPI(cli, elasticsearchAPIURL)
 
 	// delete existing elasticsearch index if already exists
-	status, err := esAPI.DeleteSearchIndex(ctx, cfg.DatasetIndex)
+	status, err := esAPI.DeleteSearchIndex(ctx, datasetIndex)
 	if err != nil {
 		if status != http.StatusNotFound {
 			log.Event(ctx, "failed to delete index", log.ERROR, log.Error(err), log.Data{"status": status})
@@ -47,13 +44,13 @@ func main() {
 	}
 
 	// create elasticsearch index with settings/mapping
-	status, err = esAPI.CreateSearchIndex(ctx, cfg.DatasetIndex, mappingsFile)
+	status, err = esAPI.CreateSearchIndex(ctx, datasetIndex, mappingsFile)
 	if err != nil {
 		log.Event(ctx, "failed to create index", log.ERROR, log.Error(err), log.Data{"status": status})
 		os.Exit(1)
 	}
 	// upload geo locations from data/datasets-test.csv and manipulate data into models.GeoDoc
-	if err = uploadDocs(ctx, esAPI, cfg.DatasetIndex, filename); err != nil {
+	if err = uploadDocs(ctx, esAPI, datasetIndex, filename); err != nil {
 		log.Event(ctx, "failed to retrieve geo docs", log.ERROR, log.Error(err))
 		os.Exit(1)
 	}
@@ -70,7 +67,6 @@ func uploadDocs(ctx context.Context, esAPI *elasticsearch.API, indexName, filena
 
 	// Parse the file
 	r := csv.NewReader(csvfile)
-	//r := csv.NewReader(bufio.NewReader(csvfile))
 
 	headerRow, err := r.Read()
 	if err != nil {
@@ -97,6 +93,7 @@ func uploadDocs(ctx context.Context, esAPI *elasticsearch.API, indexName, filena
 			log.Event(ctx, "failed to read row", log.ERROR, log.Error(err))
 		}
 
+		var geometry [][][]float64
 		var coordinates [][]float64
 
 		for i, value := range row {
@@ -113,14 +110,15 @@ func uploadDocs(ctx context.Context, esAPI *elasticsearch.API, indexName, filena
 			coordinates = append(coordinates, coordinate)
 		}
 
+		geometry = append(geometry, coordinates)
+
 		geoDoc := &models.GeoDoc{
 			Name: row[0],
 			Location: models.GeoLocation{
-				Type: "Polygon",
+				Type:        "Polygon",
+				Coordinates: geometry,
 			},
 		}
-
-		geoDoc.Location.Coordinates = append(geoDoc.Location.Coordinates, coordinates)
 
 		if _, err = esAPI.AddGeoLocation(ctx, indexName, geoDoc); err != nil {
 			log.Event(ctx, "failed to upload document to index", log.ERROR, log.Error(err), log.Data{"count": count})

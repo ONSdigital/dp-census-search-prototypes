@@ -26,18 +26,18 @@ See [command list](COMMANDS.md) for a list of helpful commands to run alongside 
 
 #### Setting up data
 
-Using `test-data/datasets.csv` file to upload geo location docs into Elasticsearch, data in here is made up but structurally based on what data we do have in the geoportal (example [here](https://geoportal.statistics.gov.uk/datasets/london-assembly-constituencies-december-2018-boundaries-en-bfc/geoservice)) and what is expected by Elasticsearch.
+Using `scripts/test-data/datasets.csv` file to upload geo location docs into Elasticsearch, data in here is made up but structurally based on what data we do have in the geoportal (example [here](https://geoportal.statistics.gov.uk/datasets/london-assembly-constituencies-december-2018-boundaries-en-bfc/geoservice)) and what is expected by Elasticsearch.
 
 The model works for versions 6.7 and 6.8. A slight tweak to the mappings.json file to get it working with version 7.*.* by removing extra nest of `doc`.
 
-7 documents will be generated and stored on an elasticsearch index of `test_geolocation` by running `make parentsearch`
+7 documents will be generated and stored on an elasticsearch index of `test_parent` by running `cd scripts; make parent; cd ..`
 
 #### GeoLocation Queries
 
 1) Within Cardiff boundaries (from test file)
 
 ```
-curl -X GET "localhost:9200/test_geolocation/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "localhost:9200/test_parent/_search?pretty" -H 'Content-Type: application/json' -d'
 {
     "query":{
         "bool": {
@@ -66,7 +66,7 @@ Areas in which the boundaries intersect the Cardiff boundaries will not be retur
 2) Within Cathays boundaries (from test file)
 
 ```
-curl -X GET "localhost:9200/test_geolocation/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "localhost:9200/test_parent/_search?pretty" -H 'Content-Type: application/json' -d'
 {
     "query":{
         "bool": {
@@ -79,6 +79,34 @@ curl -X GET "localhost:9200/test_geolocation/_search?pretty" -H 'Content-Type: a
                         "shape": {
                             "type": "polygon",
                             "coordinates" : [[[-3.18280,51.4963], [-3.1780,51.5003], [-3.1640,51.4943], [-3.1750,51.4883], [-3.18280,51.4963]]]
+                        },
+                        "relation": "intersects"
+                    }
+                }
+            }
+        }
+    }
+}
+'
+```
+
+3) Demonstration using a multipolygon search:
+
+
+```
+curl -X GET "localhost:9200/test_parent/_search?pretty" -H 'Content-Type: application/json' -d'
+{
+    "query":{
+        "bool": {
+            "must": {
+                "match_all": {}
+            },
+            "filter": {
+                "geo_shape": {
+                    "location": {
+                        "shape": {
+                            "type": "multipolygon",
+                            "coordinates" : [[[[-3.18280,51.4963], [-3.1780,51.5003], [-3.1640,51.4943], [-3.1750,51.4883], [-3.18280,51.4963]]]]
                         },
                         "relation": "intersects"
                     }
@@ -104,7 +132,7 @@ Search for datasets within a distance of postcode.
         - NSPL_FEB_2020_UK.csv
 
 2) Upload postcode data to elasticsearch index with:
-`make postcodesearch`
+`cd scripts; make postcode; cd ..`
 This will take approximately 4 minutes and 20 seconds and documents will be stored in `test_postcode` index.
 
 #### Postcode Queries
@@ -127,7 +155,7 @@ curl -XGET localhost:9200/test_postcode/_search  -H 'Content-Type: application/j
 3) Find datasets that are within the generated polygon circle:
 
 ```
-curl -X GET "localhost:9200/test_geolocation/_search?pretty" -H 'Content-Type: application/json' -d'
+curl -X GET "localhost:9200/test_parent/_search?pretty" -H 'Content-Type: application/json' -d'
 {
     "query":{
         "bool": {
@@ -165,6 +193,14 @@ See [swagger spec](swagger.yaml) for documentation of how to use each endpoint o
 #### Setting up data
 
 Follow setting up data for [Geographical Search including parent documents: Setup](#geographical-search-including-parent-documents) and [Postocde Search with Distance: Setup](#geographical-search-including-parent-documents).
+
+To create a larger selection of datasets to possibly return from either GET endpoints. Use the script geojson that will load in over 700,000 geographical areas across England and Wales as described by the census 2011 boundaries. Follow the steps [here](scripts/README.md#load-data-from-geojson-files). This will load data into the `test_geo` index.
+
+Depending on which script you run the data gets added to different indexes `test_geo` or `test_parent`; before running the API you will need to update the configuration of the application to use either of these values for the `DATASET_INDEX` environment variable, this value is defaulted to `test_parent`.
+
+Use either of the following:
+- `export DATASET_INDEX=test_geo`
+- `export DATASET_INDEX=test_parent` or use `unset DATASET_INDEX` and will fall back to default value
 
 #### Run API
 

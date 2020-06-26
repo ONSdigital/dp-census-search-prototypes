@@ -13,6 +13,7 @@ var (
 	ErrInvalidCoordinates      = errors.New("should contain two coordinates, representing [latitude, longitude]")
 	ErrInvalidShape            = errors.New("invalid list of coordinates, the first and last coordinates should be the same to complete boundary line")
 	ErrLessThanFourCoordinates = errors.New("invalid number of coordinates, need a minimum of 4 values")
+	ErrLessThanTwoPolygons     = errors.New("invalid number of polygons, needs a minimum of 2 values if the geometry type is set to polygon")
 	ErrMarshallingQuery        = errors.New("failed to marshal query to bytes for request body to send to elastic")
 	ErrMissingShapeFile        = errors.New("missing shapefile value in request")
 	ErrMissingType             = errors.New("missing type value in request")
@@ -21,7 +22,7 @@ var (
 	ErrUnableToParseJSON       = errors.New("failed to parse json body")
 	ErrUnableToReadMessage     = errors.New("failed to read message body")
 	ErrUnexpectedStatusCode    = errors.New("unexpected status code from elastic api")
-	ErrUnmarshallingJSON       = errors.New("failed to parse json body")
+	ErrUnmarshallingJSON       = errors.New("failed to unmarshal data")
 
 	NotFoundMap = map[error]bool{
 		ErrBoundaryFileNotFound: true,
@@ -35,6 +36,7 @@ var (
 		ErrInvalidCoordinates:      true,
 		ErrInvalidShape:            true,
 		ErrLessThanFourCoordinates: true,
+		ErrLessThanTwoPolygons:     true,
 		ErrMissingType:             true,
 		ErrParsingQueryParameters:  true,
 		ErrUnableToParseJSON:       true,

@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONSdigital/dp-census-search-prototypes/config"
 	"github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	es "github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	dphttp "github.com/ONSdigital/dp-net/http"
@@ -20,28 +19,26 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
+const (
+	elasticsearchAPIURL = "http://localhost:9200"
+	postcodeIndex       = "test_postcode"
+	mappingsFile        = "postcode-mappings.json"
+)
+
 var (
-	root = "NSPL_FEB_2020_UK/Data/NSPL_FEB_2020_UK.csv"
+	root = "../NSPL_FEB_2020_UK/Data/NSPL_FEB_2020_UK.csv"
 
 	countCh = make(chan int)
 )
 
-const mappingsFile = "postcode-mappings.json"
-
 func main() {
 	ctx := context.Background()
 
-	cfg, err := config.Get()
-	if err != nil {
-		log.Event(ctx, "failed to retrieve configuration", log.FATAL, log.Error(err))
-		os.Exit(1)
-	}
-
 	cli := dphttp.NewClient()
-	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
+	esAPI := es.NewElasticSearchAPI(cli, elasticsearchAPIURL)
 
 	// delete existing elasticsearch index if already exists
-	status, err := esAPI.DeleteSearchIndex(ctx, cfg.PostcodeIndex)
+	status, err := esAPI.DeleteSearchIndex(ctx, postcodeIndex)
 	if err != nil {
 		if status != http.StatusNotFound {
 			log.Event(ctx, "failed to delete index", log.ERROR, log.Error(err), log.Data{"status": status})
@@ -52,7 +49,7 @@ func main() {
 	}
 
 	// create elasticsearch index with settings/mapping
-	status, err = esAPI.CreateSearchIndex(ctx, cfg.PostcodeIndex, mappingsFile)
+	status, err = esAPI.CreateSearchIndex(ctx, postcodeIndex, mappingsFile)
 	if err != nil {
 		log.Event(ctx, "failed to create index", log.ERROR, log.Error(err), log.Data{"status": status})
 		os.Exit(1)
@@ -60,7 +57,7 @@ func main() {
 
 	go trackCounts(ctx)
 
-	if err = getPostcodeData(ctx, esAPI, cfg.PostcodeIndex, root); err != nil {
+	if err = getPostcodeData(ctx, esAPI, postcodeIndex, root); err != nil {
 		log.Event(ctx, "failed to get all postcode data into index", log.ERROR, log.Error(err))
 		os.Exit(1)
 	}

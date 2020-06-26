@@ -112,6 +112,23 @@ func (api *API) BulkRequest(ctx context.Context, indexName string, documents []i
 	return status, nil
 }
 
+// SingleRequest ...
+func (api *API) SingleRequest(ctx context.Context, indexName string, document interface{}) (int, error) {
+	path := api.url + "/" + indexName + "/_doc"
+
+	bytes, err := json.Marshal(document)
+	if err != nil {
+		return 0, err
+	}
+
+	_, status, err := api.CallElastic(ctx, path, "POST", bytes)
+	if err != nil {
+		return status, err
+	}
+
+	return status, nil
+}
+
 // GetPostcodes searches index for resources containing postcode
 func (api *API) GetPostcodes(ctx context.Context, indexName, postcode string) (*models.PostcodeResponse, int, error) {
 	path := api.url + "/" + indexName + "/_search"
@@ -209,7 +226,11 @@ func (api *API) GetBoundaryFile(ctx context.Context, indexName, id string) (*mod
 
 // QueryGeoLocation ...
 func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int, relation string) (*models.GeoLocationResponse, int, error) {
-	if geoLocation == nil || geoLocation.Type != "polygon" {
+	if geoLocation == nil {
+		return nil, 0, errors.New("missing data")
+	}
+
+	if geoLocation.Type != "polygon" && geoLocation.Type != "multipolygon" {
 		return nil, 0, errors.New("missing data")
 	}
 

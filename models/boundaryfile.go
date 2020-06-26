@@ -37,7 +37,8 @@ type BoundaryDoc struct {
 // ------------------------------------------------------------------------
 
 var validTypes = map[string]bool{
-	"polygon": true,
+	"polygon":      true,
+	"multipolygon": true,
 }
 
 // CreateGeoLocation manages the creation of a geo location from a reader
@@ -68,7 +69,7 @@ func ValidateShape(geoLocation *GeoLocation) error {
 		return err
 	}
 
-	if err := ValidateShapeFile(geoLocation.Coordinates); err != nil {
+	if err := ValidateShapeFile(geoLocation.Type, geoLocation.Coordinates); err != nil {
 		return err
 	}
 
@@ -89,37 +90,84 @@ func ValidateType(shapeType string) error {
 }
 
 // ValidateShapeFile ...
-func ValidateShapeFile(shapeFile [][][]float64) error {
-	if shapeFile == nil || len(shapeFile) < 1 {
+func ValidateShapeFile(gType string, shapeFile interface{}) error {
+	if shapeFile == nil {
 		return errs.ErrMissingShapeFile
 	}
 
-	for _, shape := range shapeFile {
-		if shape == nil || len(shape) < 1 {
-			return errs.ErrEmptyShape
-		}
+	if gType == "multipolygon" {
+		geometry := shapeFile.([][][][]float64)
 
-		if len(shape) < 4 {
-			return errs.ErrLessThanFourCoordinates
-		}
-
-		lastIndex := 0
-		for i, coordinates := range shape {
-			if coordinates == nil {
-				return errs.ErrEmptyCoordinates
+		for _, polygons := range geometry {
+			if polygons == nil || len(polygons) < 1 {
+				return errs.ErrEmptyShape
 			}
 
-			// Check coordinates have exactly two values, lat/long
-			if len(coordinates) != 2 {
-				return errs.ErrInvalidCoordinates
+			if len(polygons) < 2 {
+				return errs.ErrLessThanTwoPolygons
 			}
 
-			lastIndex = i
-		}
+			for _, shape := range polygons {
+				if shape == nil || len(shape) < 1 {
+					return errs.ErrEmptyShape
+				}
 
-		// Check first and last coordinate are the same
-		if shape[0][0] != shape[lastIndex][0] || shape[0][1] != shape[lastIndex][1] {
-			return errs.ErrInvalidShape
+				if len(shape) < 4 {
+					return errs.ErrLessThanFourCoordinates
+				}
+
+				lastIndex := 0
+				for i, coordinates := range shape {
+					if coordinates == nil {
+						return errs.ErrEmptyCoordinates
+					}
+
+					// Check coordinates have exactly two values, lat/long
+					if len(coordinates) != 2 {
+						return errs.ErrInvalidCoordinates
+					}
+
+					lastIndex = i
+				}
+
+				// Check first and last coordinate are the same
+				if shape[0][0] != shape[lastIndex][0] || shape[0][1] != shape[lastIndex][1] {
+					return errs.ErrInvalidShape
+				}
+			}
+		}
+	}
+
+	if gType == "polygon" {
+		geometry := shapeFile.([][][]float64)
+
+		for _, shape := range geometry {
+			if shape == nil || len(shape) < 1 {
+				return errs.ErrEmptyShape
+			}
+
+			if len(shape) < 4 {
+				return errs.ErrLessThanFourCoordinates
+			}
+
+			lastIndex := 0
+			for i, coordinates := range shape {
+				if coordinates == nil {
+					return errs.ErrEmptyCoordinates
+				}
+
+				// Check coordinates have exactly two values, lat/long
+				if len(coordinates) != 2 {
+					return errs.ErrInvalidCoordinates
+				}
+
+				lastIndex = i
+			}
+
+			// Check first and last coordinate are the same
+			if shape[0][0] != shape[lastIndex][0] || shape[0][1] != shape[lastIndex][1] {
+				return errs.ErrInvalidShape
+			}
 		}
 	}
 
