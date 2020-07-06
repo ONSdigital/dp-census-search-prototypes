@@ -21,13 +21,12 @@ const (
 
 func (api *SearchAPI) postParentSearch(w http.ResponseWriter, r *http.Request) {
 	defer request.DrainBody(r)
+	setAccessControl(w, http.MethodPost)
 
 	ctx := r.Context()
 
-	if r.Method == "OPTIONS" {
+	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusNoContent)
-		setJSONContentType(w)
-		setAccessControlPOST(w)
 		return
 	}
 
@@ -70,9 +69,6 @@ func (api *SearchAPI) postParentSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-
-	setJSONContentType(w)
-	setAccessControlPOST(w)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Event(ctx, "postParentSearch: error writing response", log.ERROR, log.Error(err), logData)
@@ -83,6 +79,12 @@ func (api *SearchAPI) postParentSearch(w http.ResponseWriter, r *http.Request) {
 func (api *SearchAPI) getParentSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
+	setAccessControl(w, http.MethodGet)
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 
 	var err error
 
@@ -181,8 +183,6 @@ func (api *SearchAPI) getParentSearch(w http.ResponseWriter, r *http.Request) {
 		setErrorCode(w, errs.ErrInternalServer)
 	}
 
-	setJSONContentType(w)
-	setAccessControl(w)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Event(ctx, "error writing response", log.ERROR, log.Error(err), logData)
@@ -192,8 +192,9 @@ func (api *SearchAPI) getParentSearch(w http.ResponseWriter, r *http.Request) {
 	log.Event(ctx, "getParentSearch endpoint: successfully searched index", log.INFO, logData)
 }
 
-func setAccessControlPOST(w http.ResponseWriter) {
+func setAccessControl(w http.ResponseWriter, method string) {
+	w.Header().Set("Access-Control-Allow-Methods", method+",OPTIONS")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST,OPTIONS")
 	w.Header().Set("Access-Control-Max-Age", "86400")
+	w.Header().Set("Content-Type", "application/json")
 }
