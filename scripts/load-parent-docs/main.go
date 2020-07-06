@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	es "github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	"github.com/ONSdigital/dp-census-search-prototypes/models"
 	dphttp "github.com/ONSdigital/dp-net/http"
@@ -58,7 +57,7 @@ func main() {
 	log.Event(ctx, "successfully loaded in geo docs", log.INFO)
 }
 
-func uploadDocs(ctx context.Context, esAPI *elasticsearch.API, indexName, filename string) error {
+func uploadDocs(ctx context.Context, esAPI *es.API, indexName, filename string) error {
 	csvfile, err := os.Open(filename)
 	if err != nil {
 		log.Event(ctx, "failed to open the csv file", log.ERROR, log.Error(err))
