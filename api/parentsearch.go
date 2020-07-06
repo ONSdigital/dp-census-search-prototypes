@@ -24,6 +24,13 @@ func (api *SearchAPI) postParentSearch(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusNoContent)
+		setJSONContentType(w)
+		setAccessControlPOST(w)
+		return
+	}
+
 	// Maybe remove logData?
 	logData := log.Data{
 		"request_body": r.Body,
@@ -65,7 +72,7 @@ func (api *SearchAPI) postParentSearch(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	setJSONContentType(w)
-	setAccessControl(w)
+	setAccessControlPOST(w)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Event(ctx, "postParentSearch: error writing response", log.ERROR, log.Error(err), logData)
@@ -183,4 +190,10 @@ func (api *SearchAPI) getParentSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Event(ctx, "getParentSearch endpoint: successfully searched index", log.INFO, logData)
+}
+
+func setAccessControlPOST(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST,OPTIONS")
+	w.Header().Set("Access-Control-Max-Age", "86400")
 }

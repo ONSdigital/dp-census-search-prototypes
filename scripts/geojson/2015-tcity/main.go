@@ -150,7 +150,6 @@ func storeDocs(ctx context.Context, esAPI *es.API, indexName string, parser *jsp
 		} else {
 			newDoc.Location.Coordinates, err = getPolygonCoordinates(ctx, feature.ObjectVals["geometry"].(*jsparser.JSON).ObjectVals["coordinates"])
 			polygonCount++
-
 		}
 		if err != nil {
 			log.Event(ctx, "failed to get coordinates", log.ERROR, log.Error(err), log.Data{"count": count})

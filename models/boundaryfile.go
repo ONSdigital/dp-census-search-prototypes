@@ -91,47 +91,57 @@ func ValidateType(shapeType string) error {
 
 // ValidateShapeFile ...
 func ValidateShapeFile(gType string, shapeFile interface{}) error {
+
 	if shapeFile == nil {
 		return errs.ErrMissingShapeFile
 	}
 
 	if gType == "multipolygon" {
-		geometry := shapeFile.([][][][]float64)
+		geometry := shapeFile.([]interface{})
 
-		for _, polygons := range geometry {
-			if polygons == nil || len(polygons) < 1 {
+		for _, p := range geometry {
+			if p == nil {
 				return errs.ErrEmptyShape
 			}
+			polygons := p.([]interface{})
 
 			if len(polygons) < 2 {
 				return errs.ErrLessThanTwoPolygons
 			}
 
-			for _, shape := range polygons {
-				if shape == nil || len(shape) < 1 {
+			for _, s := range polygons {
+				if s == nil {
 					return errs.ErrEmptyShape
 				}
+				shapes := s.([]interface{})
 
-				if len(shape) < 4 {
+				if len(shapes) < 4 {
 					return errs.ErrLessThanFourCoordinates
 				}
 
-				lastIndex := 0
-				for i, coordinates := range shape {
-					if coordinates == nil {
+				var firstShape, lastShape []float64
+				for i, c := range shapes {
+					lastShape = nil
+					if c == nil {
 						return errs.ErrEmptyCoordinates
 					}
+					coordinates := c.([]interface{})
 
-					// Check coordinates have exactly two values, lat/long
 					if len(coordinates) != 2 {
 						return errs.ErrInvalidCoordinates
 					}
 
-					lastIndex = i
+					for _, coordinate := range coordinates {
+						lastShape = append(lastShape, coordinate.(float64))
+					}
+
+					if i == 0 {
+						firstShape = lastShape
+					}
 				}
 
 				// Check first and last coordinate are the same
-				if shape[0][0] != shape[lastIndex][0] || shape[0][1] != shape[lastIndex][1] {
+				if firstShape[0] != lastShape[0] || firstShape[1] != lastShape[1] {
 					return errs.ErrInvalidShape
 				}
 			}
@@ -139,33 +149,41 @@ func ValidateShapeFile(gType string, shapeFile interface{}) error {
 	}
 
 	if gType == "polygon" {
-		geometry := shapeFile.([][][]float64)
+		geometry := shapeFile.([]interface{})
 
-		for _, shape := range geometry {
-			if shape == nil || len(shape) < 1 {
+		for _, s := range geometry {
+			if s == nil {
 				return errs.ErrEmptyShape
 			}
+			shapes := s.([]interface{})
 
-			if len(shape) < 4 {
+			if len(shapes) < 4 {
 				return errs.ErrLessThanFourCoordinates
 			}
 
-			lastIndex := 0
-			for i, coordinates := range shape {
-				if coordinates == nil {
+			var firstShape, lastShape []float64
+			for i, c := range shapes {
+				lastShape = nil
+				if c == nil {
 					return errs.ErrEmptyCoordinates
 				}
+				coordinates := c.([]interface{})
 
-				// Check coordinates have exactly two values, lat/long
 				if len(coordinates) != 2 {
 					return errs.ErrInvalidCoordinates
 				}
 
-				lastIndex = i
+				for _, coordinate := range coordinates {
+					lastShape = append(lastShape, coordinate.(float64))
+				}
+
+				if i == 0 {
+					firstShape = lastShape
+				}
 			}
 
 			// Check first and last coordinate are the same
-			if shape[0][0] != shape[lastIndex][0] || shape[0][1] != shape[lastIndex][1] {
+			if firstShape[0] != lastShape[0] || firstShape[1] != lastShape[1] {
 				return errs.ErrInvalidShape
 			}
 		}
