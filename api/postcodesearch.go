@@ -30,6 +30,12 @@ const (
 func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	vars := mux.Vars(r)
+	setAccessControl(w, http.MethodGet)
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 
 	var err error
 
@@ -170,8 +176,6 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	setJSONContentType(w)
-	setAccessControl(w)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Event(ctx, "error writing response", log.ERROR, log.Error(err), logData)
@@ -179,13 +183,6 @@ func (api *SearchAPI) getPostcodeSearch(w http.ResponseWriter, r *http.Request) 
 	}
 
 	log.Event(ctx, "getPostcodeSearch endpoint: successfully searched index", log.INFO, logData)
-}
-
-func setJSONContentType(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-}
-func setAccessControl(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func setErrorCode(w http.ResponseWriter, err error) {

@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	es "github.com/ONSdigital/dp-census-search-prototypes/elasticsearch"
 	dphttp "github.com/ONSdigital/dp-net/http"
 
@@ -63,7 +62,7 @@ func main() {
 	}
 }
 
-func getPostcodeData(ctx context.Context, esAPI *elasticsearch.API, indexName, filename string) error {
+func getPostcodeData(ctx context.Context, esAPI *es.API, indexName, filename string) error {
 	csvfile, err := os.Open(filename)
 	if err != nil {
 		log.Event(ctx, "failed to open the csv file", log.ERROR, log.Error(err))
