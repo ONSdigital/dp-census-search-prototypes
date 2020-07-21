@@ -224,8 +224,39 @@ func (api *API) GetBoundaryFile(ctx context.Context, indexName, id string) (*mod
 	return response, status, nil
 }
 
+// GetBoundaryFiles searches index for resources matching text
+func (api *API) GetBoundaryFiles(ctx context.Context, indexName string, query interface{}) (*models.GeoResponseWithLocation, int, error) {
+
+	path := api.url + "/" + indexName + "/_search"
+	logData := log.Data{"query": query, "path": path}
+
+	log.Event(ctx, "find documents based on search term", log.INFO, logData)
+	bytes, err := json.Marshal(query)
+	if err != nil {
+		log.Event(ctx, "unable to marshal elastic search query to bytes", log.ERROR, log.Error(err), logData)
+		return nil, 0, errs.ErrMarshallingQuery
+	}
+
+	responseBody, status, err := api.CallElastic(ctx, path, "GET", bytes)
+	logData["status"] = status
+	if err != nil {
+		log.Event(ctx, "failed to call elasticsearch", log.ERROR, log.Error(err), logData)
+		return nil, status, errs.ErrIndexNotFound
+	}
+
+	// GeoLocation response model
+	response := &models.GeoResponseWithLocation{}
+
+	if err = json.Unmarshal(responseBody, response); err != nil {
+		log.Event(ctx, "unable to unmarshal json body", log.ERROR, log.Error(err))
+		return nil, status, errs.ErrUnmarshallingJSON
+	}
+
+	return response, status, nil
+}
+
 // QueryGeoLocation ...
-func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int, relation string) (*models.GeoLocationResponse, int, error) {
+func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocation *models.GeoLocation, limit, offset int, relation string) (*models.GeoResponse, int, error) {
 	if geoLocation == nil {
 		return nil, 0, errors.New("missing data")
 	}
@@ -250,7 +281,7 @@ func (api *API) QueryGeoLocation(ctx context.Context, indexName string, geoLocat
 		return nil, status, err
 	}
 
-	response := &models.GeoLocationResponse{}
+	response := &models.GeoResponse{}
 
 	if err = json.Unmarshal(responseBody, response); err != nil {
 		log.Event(ctx, "unable to unmarshal json body", log.ERROR, log.Error(err))

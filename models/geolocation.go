@@ -51,7 +51,7 @@ type GeoLocationObj struct {
 
 // ------------------------------------------------------------------------
 
-type GeoLocationResponse struct {
+type GeoResponse struct {
 	Hits Hits `json:"hits"`
 }
 
@@ -88,7 +88,39 @@ type SearchResult struct {
 	StatedArea   float64 `json:"stated_area,omitempty"`
 	StatedLength float64 `json:"stated_length,omitempty"`
 	TCITY15NM    string  `json:"tcity15nm,omitempty"`
-	// Location     GeoLocation `json:"location,omitempty"`
+}
+
+// ------------------------------------------------------------------------
+
+type GeoResponseWithLocation struct {
+	Hits HitsWithLocation `json:"hits"`
+}
+
+type HitsWithLocation struct {
+	Total   int                   `json:"total"`
+	HitList []HitListWithLocation `json:"hits"`
+}
+
+type HitListWithLocation struct {
+	Score  float64                  `json:"_score"`
+	Source SearchResultWithLocation `json:"_source"`
+}
+
+// SearchResultsWithLocation represents a structure for a list of returned objects
+type SearchResultsWithLocation struct {
+	Count      int                        `json:"count"`
+	Items      []SearchResultWithLocation `json:"items"`
+	Limit      int                        `json:"limit"`
+	Offset     int                        `json:"offset"`
+	TotalCount int                        `json:"total_count"`
+}
+
+// SearchResultWithLocation represents data on a single item of search results
+type SearchResultWithLocation struct {
+	Name      string      `json:"name"`
+	Code      string      `json:"code"`
+	Hierarchy string      `json:"hierarchy"`
+	Location  GeoLocation `json:"location,omitempty"`
 }
 
 // ErrorInvalidRelationValue - return error
