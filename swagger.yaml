@@ -92,6 +92,28 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         500:
           $ref: '#/components/responses/InternalError'
+  /search/placenames/{name}:
+    get:
+      tags:
+      - "Public"
+      summary: "Returns a list of search results based on the postcode and distance."
+      parameters:
+      - $ref: '#/components/parameters/name'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
+      responses:
+        200:
+          description: "A json list containing search results of datasets which contain the name of place in the search mapping field name."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetsWithLocation'
+        400:
+          $ref: '#/components/responses/InvalidRequestError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
+        500:
+          $ref: '#/components/responses/InternalError'
   /search/postcodes/{postcode}:
     get:
       tags:
@@ -118,6 +140,14 @@ paths:
           $ref: '#/components/responses/InternalError'
 components:
   parameters:
+    name:
+      name: name
+      description: "The name of a place"
+      in: path
+      required: true
+      schema:
+        type: string
+        example: "bradford"
     shapeId:
       name: shapeId
       description: "The unique identifier to represent a shape file"
@@ -188,7 +218,7 @@ components:
         coordinates:
           $ref: '#/components/schemas/Shape'
     Datasets:
-      description: "The resulting resource of the completed search against a dimension hierarchy."
+      description: "The resulting resource of the completed search against a geo location."
       type: object
       required: ["count","limit", "items", "offset"]
       properties:
@@ -206,6 +236,48 @@ components:
         offset:
           description: "The first row of items to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter. The total number of items that one can page through is limited to 1000 items."
           type: integer
+    DatasetsWithLocation:
+      description: "The resulting resource of the completed search against a dataset place name."
+      type: object
+      required: ["count","limit", "items", "offset"]
+      properties:
+        count:
+          description: "The number of items returned."
+          type: integer
+        items:
+          description: "The results of the postcode search."
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResponseWithLocation'
+        limit:
+          description: "The number of items requested, defaulted to 50 and limited to 1000."
+          type: integer
+        offset:
+          description: "The first row of items to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter. The total number of items that one can page through is limited to 1000 items."
+          type: integer
+    SearchResponseWithLocation:
+      description: "An individual result (dataset) of the postcode search"
+      type: object
+      required: ["name", "code", "hierarchy"]
+      properties:
+        name:
+          type: string
+          description: "The name of the geographical location of the dataset."
+          example: "Wales"
+        code:
+          type: string
+          description: "The code representing the geographical location."
+        hierarchy: 
+          type: string
+          description: "The geographical hierarchy level"
+          enum: [
+            "Lower Layer Super Output Areas",
+            "Middle Layer Super Output Areas",
+            "Output Areas",
+            "Major Towns and Cities"
+          ]
+        location:
+          $ref: '#/components/schemas/Location'
     SearchResponse:
       description: "An individual result (dataset) of the postcode search"
       type: object
@@ -260,8 +332,6 @@ components:
         stated_length:  
           type: string
           description: "☃"
-        location:
-          $ref: '#/components/schemas/Location'
     Location:
       description: "The geographical location of the dataset or data found, containing a geographial description of the shape."
       type: object
@@ -280,7 +350,7 @@ components:
             "Polygon"
           ]
     Shape:
-      description: "The actual shape of the geographical area the dataset belongs to."
+      description: "The actual shape of the geographical area the dataset belongs to. Multipolygons have an extra nest of arrays then a polygon shape as multipolygons are arrays of polygons."
       type: array
       minLength: 4
       required: [

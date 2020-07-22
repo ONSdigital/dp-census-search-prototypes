@@ -187,6 +187,7 @@ All prototypes developed will exist on an endpoint in the search API. These incl
 - Search for parent docs via geo boundary file:
     - POST `search/parent` with shape file
     - GET `search/parent/{shape_id}`
+- Search by Placename - endpoint: GET `/search/placenames/{name}`
 
 See [swagger spec](swagger.yaml) for documentation of how to use each endpoint on the API. Copy yaml into [swagger editor](https://editor.swagger.io/) (left panel) to generate a pretty web ui on the right to navigate documentaion.
 
@@ -221,4 +222,7 @@ curl -XPOST localhost:10000/search/parent -d'{
   "coordinates": [[[-3.232257,51.507306],[-3.128257,51.500306],[-3.13684,51.467704],[-3.2085046,51.4520104],[-3.232257,51.507306]]]
 }'
 curl -XGET localhost:10000/search/parent/{shape_id}
+
+curl -XGET localhost:10000/search/placenames/bradford
+curl -XGET localhost:10000/search/placenames/bradford?limit=1&offset=1
 ```
