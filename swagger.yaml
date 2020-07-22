@@ -92,7 +92,7 @@ paths:
           $ref: '#/components/responses/NotFoundError'
         500:
           $ref: '#/components/responses/InternalError'
-  /search/placename/{name}:
+  /search/placenames/{name}:
     get:
       tags:
       - "Public"
