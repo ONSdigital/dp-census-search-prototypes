@@ -99,15 +99,15 @@ func ValidateShapeFile(gType string, shapeFile interface{}) error {
 	if gType == "multipolygon" {
 		geometry := shapeFile.([]interface{})
 
+		if len(geometry) < 2 {
+			return errs.ErrLessThanTwoPolygons
+		}
+
 		for _, p := range geometry {
 			if p == nil {
 				return errs.ErrEmptyShape
 			}
 			polygons := p.([]interface{})
-
-			if len(polygons) < 2 {
-				return errs.ErrLessThanTwoPolygons
-			}
 
 			for _, s := range polygons {
 				if s == nil {

@@ -13,7 +13,7 @@ var (
 	ErrInvalidCoordinates      = errors.New("should contain two coordinates, representing [latitude, longitude]")
 	ErrInvalidShape            = errors.New("invalid list of coordinates, the first and last coordinates should be the same to complete boundary line")
 	ErrLessThanFourCoordinates = errors.New("invalid number of coordinates, need a minimum of 4 values")
-	ErrLessThanTwoPolygons     = errors.New("invalid number of polygons, needs a minimum of 2 values if the geometry type is set to polygon")
+	ErrLessThanTwoPolygons     = errors.New("invalid number of polygons, needs a minimum of 2 values if the geometry type is set to multipolygon")
 	ErrMarshallingQuery        = errors.New("failed to marshal query to bytes for request body to send to elastic")
 	ErrMissingShapeFile        = errors.New("missing shapefile value in request")
 	ErrMissingType             = errors.New("missing type value in request")
