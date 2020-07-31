@@ -19,7 +19,7 @@ apibuild: build
 boundaryindex: boundaryindexbuild
 	HUMAN_LOG=1 go run -race cmd/$(INDEX_CREATION)/main.go
 
-api: boundaryindex apibuild
+debug: boundaryindex apibuild
 	HUMAN_LOG=1 go run -race cmd/$(SEARCH_API)/main.go
 
 test:
