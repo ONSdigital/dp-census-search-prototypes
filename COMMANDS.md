@@ -15,7 +15,7 @@ e.g. `curl -XPUT localhost:9200/new-index -d@./elasticsearch/mappings.json`
 
 ### Get index
 
-`curl -XGET 'loclahost:9200/<index>/*?pretty'`
+`curl -XGET 'localhost:9200/<index>/*?pretty'`
 
 ### Delete index
 
