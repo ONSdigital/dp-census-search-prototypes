@@ -207,7 +207,7 @@ Use either of the following:
 
 To start up the API use the following command: ...
 
-`make api`
+`make debug`
 
 ...in root of repository.
 
